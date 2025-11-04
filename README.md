@@ -308,8 +308,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### 🌟 If you enjoy this plugin, please star this repository! ⭐
 
-**[Download](https://www.spigotmc.org/resources/simpleclans-pl.125629/)** • **[Report Bug](https://github.com/yourusername/SimpleClan/issues)** • **[Request Feature](https://github.com/yourusername/SimpleClan/issues)**
+**[Download](https://www.spigotmc.org/resources/simpleclans-pl.125629/)** • **[Report Bug](https://github.com/tremeq/SimpleClan/issues)** • **[Request Feature](https://github.com/tremeq/SimpleClan/issues)**
 
 🇵🇱 Fully translated for Polish community | 🇬🇧 Complete English support
 
 </div>
+
