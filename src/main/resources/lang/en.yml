@@ -1,0 +1,134 @@
+# English language file for SimpleClan
+prefix: "&8[&6SimpleClan&8] &r"
+
+# Basic messages
+no-permission: "&cYou don't have permission to use this command!"
+player-only: "&cThis command can only be used by a player!"
+unknown-command: "&cUnknown command! Use /clan help"
+
+# Clan - basic
+clan:
+  created: "&aClan &6{clan} &ahas been created!"
+  already-exists: "&cA clan with this name already exists!"
+  disbanded: "&cThe clan has been disbanded!"
+  not-found: "&cClan not found!"
+  full: "&cThe clan is full!"
+
+# Membership
+membership:
+  already-in-clan: "&cYou are already in a clan!"
+  not-in-clan: "&cYou are not in any clan!"
+  not-leader: "&cYou are not the clan leader!"
+  not-leader-or-mod: "&cYou are not the leader or a moderator of the clan!"
+  player-not-found: "&cPlayer not found!"
+  player-already-in-clan: "&cThis player is already in a clan!"
+
+# Moderators
+moderator:
+  added: "&aPlayer &6{player} &ahas been promoted to clan moderator!"
+  removed: "&cPlayer &6{player} &cis no longer a clan moderator!"
+  player-promoted: "&aYou have been promoted to moderator of clan &6{clan}&a!"
+  player-demoted: "&cYou are no longer a clan moderator!"
+  max-moderators: "&cThe clan can have a maximum of {max} moderators!"
+  already-moderator: "&cThis player is already a moderator!"
+  not-moderator: "&cThis player is not a moderator!"
+
+# Kicking members
+kick:
+  member-kicked: "&cPlayer &6{player} &chas been kicked from the clan!"
+  player-kicked: "&cYou have been kicked from clan &6{clan}&c!"
+  cannot-kick-leader: "&cYou cannot kick the leader!"
+  cannot-kick-moderator: "&cYou cannot kick a moderator! Only the leader can do this."
+  cannot-kick-yourself: "&cYou cannot kick yourself! Use /clan leave"
+  cannot-demote-leader: "&cYou cannot demote the leader!"
+
+# Invitations
+invite:
+  sent: "&aInvitation sent to player &6{player}&a!"
+  received: "&aYou have received an invitation to clan &6{clan}&a! Use &e/clan accept &ato accept it."
+  no-invite: "&cYou don't have any invitations!"
+  accepted: "&aPlayer &6{player} &ahas joined the clan!"
+  joined-clan: "&aYou have joined clan &6{clan}&a!"
+
+# Leaving
+leave:
+  left-clan: "&eYou have left the clan!"
+  player-left: "&ePlayer &6{player} &ehas left the clan!"
+
+# Member list
+members:
+  header: "&6Members of clan {clan}:"
+  format: "&7- &e{player} {status}"
+  leader-status: "&6(Leader)"
+  moderator-status: "&a(Moderator)"
+  member-status: ""
+
+# Clan information
+info:
+  header: "&6Information about clan {clan}:"
+  leader: "&7Leader: &e{leader}"
+  moderators: "&7Moderators: &e{moderators}"
+  members: "&7Members: &e{count}/{max}"
+  created: "&7Created: &e{date}"
+  tag-color: "&7Tag color: {color}{clan}"
+  pvp: "&7PvP: {status}"
+  kills: "&7Kills: &e{kills}"
+
+# Clan name errors
+name:
+  too-short: "&cClan name must be at least {min} characters long!"
+  too-long: "&cClan name can be at most {max} characters long!"
+  invalid-characters: "&cClan name contains invalid characters!"
+
+# Clan chat
+chat:
+  toggled-on: "&aClan chat mode enabled! Everything you type goes only to your clan."
+  toggled-off: "&cClan chat mode disabled."
+  format: "&8[&6Clan&8] &r{role}&e{player}&7: &f{message}"
+  sent: "&8[&6Clan&8] &r{role}&e{player}&7: &f{message}"
+
+# Tag colors
+color:
+  changed: "&aTag color changed to: {color}{clan}"
+  invalid: "&cInvalid color! Available: {colors}"
+  available: "&aAvailable colors: &f{colors}"
+
+# PvP
+pvp:
+  enabled: "&aClan PvP has been enabled!"
+  disabled: "&cClan PvP has been disabled!"
+  status-enabled: "&aEnabled"
+  status-disabled: "&cDisabled"
+  blocked: "&cYou cannot attack a member of your clan!"
+
+# Ranking
+ranking:
+  header: "&6&l=== TOP 10 Clans (Kills) ==="
+  format: "&e#{position} &6{clan} &7- &e{kills} kills"
+  footer: "&6&l============================"
+  no-clans: "&cNo clans to display!"
+
+# Kill notifications
+kill:
+  clan-kill: "&6{killer} &efrom clan &6{clan} &akilled &c{victim}&a!"
+
+# Help
+help:
+  header: "&6Available SimpleClan commands:"
+  format: "&e/{command} &7- {description}"
+  commands:
+    create: "Creates a new clan"
+    invite: "Invites a player to the clan"
+    accept: "Accepts a clan invitation"
+    leave: "Leaves the clan"
+    disband: "Disbands the clan (leader only)"
+    list: "Displays the list of clan members"
+    info: "Displays clan information"
+    promote: "Promotes a member to moderator (leader only)"
+    demote: "Demotes a moderator (leader only)"
+    kick: "Kicks a player from the clan (leader/moderator)"
+    chat: "Sends a message to clan chat"
+    cc: "Toggles clan chat mode"
+    color: "Changes the clan tag color"
+    pvp: "Enables/disables PvP in the clan (leader)"
+    ranking: "Displays the clan ranking"

@@ -1,0 +1,134 @@
+# Polski plik językowy dla SimpleClan
+prefix: "&8[&6SimpleClan&8] &r"
+
+# Podstawowe wiadomości
+no-permission: "&cNie masz uprawnień do tej komendy!"
+player-only: "&cTa komenda może być użyta tylko przez gracza!"
+unknown-command: "&cNieznana komenda! Użyj /klan pomoc"
+
+# Klan - podstawowe
+clan:
+  created: "&aKlan &6{clan} &azostał utworzony!"
+  already-exists: "&cKlan o tej nazwie już istnieje!"
+  disbanded: "&cKlan został rozwiązany!"
+  not-found: "&cNie znaleziono klanu!"
+  full: "&cKlan jest pełny!"
+
+# Członkostwo
+membership:
+  already-in-clan: "&cJuż jesteś w klanie!"
+  not-in-clan: "&cNie jesteś w żadnym klanie!"
+  not-leader: "&cNie jesteś liderem klanu!"
+  not-leader-or-mod: "&cNie jesteś liderem ani zastępcą klanu!"
+  player-not-found: "&cGracz nie został znaleziony!"
+  player-already-in-clan: "&cTen gracz już jest w klanie!"
+
+# Zastępcy
+moderator:
+  added: "&aGracz &6{player} &azostał mianowany zastępcą klanu!"
+  removed: "&cGracz &6{player} &cnie jest już zastępcą klanu!"
+  player-promoted: "&aTy zostałeś mianowany zastępcą klanu &6{clan}&a!"
+  player-demoted: "&cNie jesteś już zastępcą klanu!"
+  max-moderators: "&cKlan może mieć maksymalnie {max} zastępców!"
+  already-moderator: "&cTen gracz już jest zastępcą!"
+  not-moderator: "&cTen gracz nie jest zastępcą!"
+
+# Wyrzucanie członków
+kick:
+  member-kicked: "&cGracz &6{player} &czostał wyrzucony z klanu!"
+  player-kicked: "&cZostałeś wyrzucony z klanu &6{clan}&c!"
+  cannot-kick-leader: "&cNie możesz wyrzucić lidera!"
+  cannot-kick-moderator: "&cNie możesz wyrzucić zastępcy! Tylko lider może to zrobić."
+  cannot-kick-yourself: "&cNie możesz wyrzucić samego siebie! Użyj /klan opusc"
+  cannot-demote-leader: "&cNie możesz zdegradować lidera!"
+
+# Zaproszenia
+invite:
+  sent: "&aZaproszenie wysłane do gracza &6{player}&a!"
+  received: "&aOtrzymałeś zaproszenie do klanu &6{clan}&a! Użyj &e/klan akceptuj &aaby je zaakceptować."
+  no-invite: "&cNie masz żadnych zaproszeń!"
+  accepted: "&aGracz &6{player} &adołączył do klanu!"
+  joined-clan: "&aDołączyłeś do klanu &6{clan}&a!"
+
+# Opuszczanie
+leave:
+  left-clan: "&eOpuściłeś klan!"
+  player-left: "&eGracz &6{player} &eopuścił klan!"
+
+# Lista członków
+members:
+  header: "&6Członkowie klanu {clan}:"
+  format: "&7- &e{player} {status}"
+  leader-status: "&6(Lider)"
+  moderator-status: "&a(Zastępca)"
+  member-status: ""
+
+# Informacje o klanie
+info:
+  header: "&6Informacje o klanie {clan}:"
+  leader: "&7Lider: &e{leader}"
+  moderators: "&7Zastępcy: &e{moderators}"
+  members: "&7Członków: &e{count}/{max}"
+  created: "&7Utworzony: &e{date}"
+  tag-color: "&7Kolor tagu: {color}{clan}"
+  pvp: "&7PvP: {status}"
+  kills: "&7Zabójstwa: &e{kills}"
+
+# Błędy nazwy klanu
+name:
+  too-short: "&cNazwa klanu musi mieć co najmniej {min} znaków!"
+  too-long: "&cNazwa klanu może mieć maksymalnie {max} znaków!"
+  invalid-characters: "&cNazwa klanu zawiera niedozwolone znaki!"
+
+# Chat klanowy
+chat:
+  toggled-on: "&aTryb czatu klanowego włączony! Wszystko co piszesz trafia tylko do klanu."
+  toggled-off: "&cTryb czatu klanowego wyłączony."
+  format: "&8[&6Klan&8] &r{role}&e{player}&7: &f{message}"
+  sent: "&8[&6Klan&8] &r{role}&e{player}&7: &f{message}"
+
+# Kolory tagu
+color:
+  changed: "&aKolor tagu zmieniony na: {color}{clan}"
+  invalid: "&cNieprawidłowy kolor! Dostępne: {colors}"
+  available: "&aDostępne kolory: &f{colors}"
+
+# PvP
+pvp:
+  enabled: "&aPvP w klanie zostało włączone!"
+  disabled: "&cPvP w klanie zostało wyłączone!"
+  status-enabled: "&aWłączone"
+  status-disabled: "&cWyłączone"
+  blocked: "&cNie możesz zaatakować członka swojego klanu!"
+
+# Ranking
+ranking:
+  header: "&6&l=== TOP 10 Klanów (Zabójstwa) ==="
+  format: "&e#{position} &6{clan} &7- &e{kills} zabójstw"
+  footer: "&6&l================================"
+  no-clans: "&cBrak klanów do wyświetlenia!"
+
+# Kill notifications
+kill:
+  clan-kill: "&6{killer} &ez klanu &6{clan} &azabił gracza &c{victim}&a!"
+
+# Pomoc
+help:
+  header: "&6Dostępne komendy SimpleClan:"
+  format: "&e/{command} &7- {description}"
+  commands:
+    create: "Tworzy nowy klan"
+    invite: "Zaprasza gracza do klanu"
+    accept: "Akceptuje zaproszenie do klanu"
+    leave: "Opuszcza klan"
+    disband: "Rozwiązuje klan (tylko lider)"
+    list: "Wyświetla listę członków klanu"
+    info: "Wyświetla informacje o klanie"
+    promote: "Mianuje zastępcę klanu (tylko lider)"
+    demote: "Degraduje zastępcę klanu (tylko lider)"
+    kick: "Wyrzuca gracza z klanu (lider/zastępca)"
+    chat: "Wysyła wiadomość na czat klanowy"
+    cc: "Przełącza tryb czatu klanowego"
+    color: "Zmienia kolor tagu klanu"
+    pvp: "Włącza/wyłącza PvP w klanie (lider)"
+    ranking: "Wyświetla ranking klanów"
