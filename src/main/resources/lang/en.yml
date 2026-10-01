@@ -1,16 +1,22 @@
 # English language file for SimpleClan
+# Colors: &0-&9, &a-&f, formatting &l &o &n &m &k &r, HEX colors: &#RRGGBB
+# An empty message ("") means the message will not be sent.
 prefix: "&8[&6SimpleClan&8] &r"
 
 # Basic messages
 no-permission: "&cYou don't have permission to use this command!"
 player-only: "&cThis command can only be used by a player!"
-unknown-command: "&cUnknown command! Use /clan help"
+unknown-command: "&cUnknown command! Use &e/clan help"
 
-# Clan - basic
+general:
+  none: "None"
+  unknown: "Unknown"
+
+# Clan - basics
 clan:
   created: "&aClan &6{clan} &ahas been created!"
   already-exists: "&cA clan with this name already exists!"
-  disbanded: "&cThe clan has been disbanded!"
+  disbanded: "&cClan &6{clan} &chas been disbanded!"
   not-found: "&cClan not found!"
   full: "&cThe clan is full!"
 
@@ -19,116 +25,252 @@ membership:
   already-in-clan: "&cYou are already in a clan!"
   not-in-clan: "&cYou are not in any clan!"
   not-leader: "&cYou are not the clan leader!"
-  not-leader-or-mod: "&cYou are not the leader or a moderator of the clan!"
+  not-leader-or-mod: "&cYou are neither the leader nor a deputy of the clan!"
   player-not-found: "&cPlayer not found!"
   player-already-in-clan: "&cThis player is already in a clan!"
+  not-member: "&cPlayer &6{player} &cis not a member of your clan!"
 
-# Moderators
+# Deputies
 moderator:
-  added: "&aPlayer &6{player} &ahas been promoted to clan moderator!"
-  removed: "&cPlayer &6{player} &cis no longer a clan moderator!"
-  player-promoted: "&aYou have been promoted to moderator of clan &6{clan}&a!"
-  player-demoted: "&cYou are no longer a clan moderator!"
-  max-moderators: "&cThe clan can have a maximum of {max} moderators!"
-  already-moderator: "&cThis player is already a moderator!"
-  not-moderator: "&cThis player is not a moderator!"
+  added: "&aPlayer &6{player} &ahas been appointed as clan deputy!"
+  removed: "&cPlayer &6{player} &cis no longer a clan deputy!"
+  player-promoted: "&aYou have been appointed as deputy of clan &6{clan}&a!"
+  player-demoted: "&cYou are no longer a clan deputy!"
+  max-moderators: "&cA clan can have a maximum of {max} deputies!"
+  already-moderator: "&cThis player is already a deputy!"
+  not-moderator: "&cThis player is not a deputy!"
 
 # Kicking members
 kick:
   member-kicked: "&cPlayer &6{player} &chas been kicked from the clan!"
   player-kicked: "&cYou have been kicked from clan &6{clan}&c!"
   cannot-kick-leader: "&cYou cannot kick the leader!"
-  cannot-kick-moderator: "&cYou cannot kick a moderator! Only the leader can do this."
-  cannot-kick-yourself: "&cYou cannot kick yourself! Use /clan leave"
+  cannot-kick-moderator: "&cYou cannot kick a deputy! Only the leader can do this."
+  cannot-kick-yourself: "&cYou cannot kick yourself! Use &e/clan leave"
   cannot-demote-leader: "&cYou cannot demote the leader!"
 
 # Invitations
 invite:
   sent: "&aInvitation sent to player &6{player}&a!"
-  received: "&aYou have received an invitation to clan &6{clan}&a! Use &e/clan accept &ato accept it."
+  received: "&aYou have been invited to clan &6{clan}&a! Type &e/clan accept {clan} &ato join or &e/clan deny {clan} &ato decline. &7(valid for {seconds}s)"
   no-invite: "&cYou don't have any invitations!"
+  no-invite-from: "&cYou don't have an invitation from clan &6{clan}&c!"
+  multiple: "&eYou have several invitations: &6{clans}"
+  already-invited: "&cPlayer &6{player} &calready has an invitation to your clan!"
   accepted: "&aPlayer &6{player} &ahas joined the clan!"
   joined-clan: "&aYou have joined clan &6{clan}&a!"
+  denied: "&eYou declined the invitation to clan &6{clan}&e."
+  denied-notify: "&cPlayer &6{player} &cdeclined the clan invitation."
 
 # Leaving
 leave:
   left-clan: "&eYou have left the clan!"
   player-left: "&ePlayer &6{player} &ehas left the clan!"
+  leader-cannot-leave: "&cAs the leader you cannot leave the clan! Transfer leadership (&e/clan leader <player>&c) or disband the clan (&e/clan disband&c)."
+
+# Disbanding
+disband:
+  confirm: "&c&lWARNING! &cThis will delete clan &6{clan} &cforever. Type &e/clan disband {confirm} &cwithin {seconds}s to confirm."
+
+# Leadership transfer
+leader:
+  confirm: "&eAre you sure you want to transfer leadership to &6{player}&e? Type &6/clan leader {player} {confirm} &ewithin {seconds}s."
+  changed: "&aPlayer &6{player} &ais the new clan leader! &7(previous leader: {old})"
+  already-leader: "&cThis player is already the clan leader!"
+
+# Confirmations
+confirm:
+  nothing-pending: "&cYou have nothing to confirm or the confirmation time has expired."
 
 # Member list
 members:
-  header: "&6Members of clan {clan}:"
-  format: "&7- &e{player} {status}"
+  header: "&6Members of clan {clan} &7({count}):"
+  format: "&7- {online} &e{player} {status}"
   leader-status: "&6(Leader)"
-  moderator-status: "&a(Moderator)"
+  moderator-status: "&a(Deputy)"
   member-status: ""
+  online: "&a●"
+  offline: "&7●"
 
 # Clan information
 info:
   header: "&6Information about clan {clan}:"
   leader: "&7Leader: &e{leader}"
-  moderators: "&7Moderators: &e{moderators}"
-  members: "&7Members: &e{count}/{max}"
+  moderators: "&7Deputies: &e{moderators}"
+  members: "&7Members: &e{count}/{max} &7(online: &a{online}&7)"
   created: "&7Created: &e{date}"
-  tag-color: "&7Tag color: {color}{clan}"
-  pvp: "&7PvP: {status}"
-  kills: "&7Kills: &e{kills}"
+  tag: "&7Tag: {tag}"
+  pvp: "&7Clan PvP: {status}"
+  stats: "&7Kills: &e{kills} &7| Deaths: &e{deaths} &7| KDR: &e{kdr} &7| Rank: &e#{rank}"
+  allies: "&7Allies: &d{allies}"
 
 # Clan name errors
 name:
   too-short: "&cClan name must be at least {min} characters long!"
-  too-long: "&cClan name can be at most {max} characters long!"
-  invalid-characters: "&cClan name contains invalid characters!"
+  too-long: "&cClan name can be a maximum of {max} characters long!"
+  invalid-characters: "&cClan name can only contain letters (A-Z), digits, _ and -!"
 
-# Clan chat
+# Clan and alliance chat
+# Format placeholders: {role}, {player}, {tag}, {message}
 chat:
-  toggled-on: "&aClan chat mode enabled! Everything you type goes only to your clan."
-  toggled-off: "&cClan chat mode disabled."
   format: "&8[&6Clan&8] &r{role}&e{player}&7: &f{message}"
-  sent: "&8[&6Clan&8] &r{role}&e{player}&7: &f{message}"
+  ally-format: "&8[&dAlly&8] &r{tag} {role}&e{player}&7: &f{message}"
+  leader-role: "&6[Leader] "
+  moderator-role: "&a[Deputy] "
+  toggled-on: "&aClan chat mode enabled! Everything you type goes only to your clan."
+  ally-toggled-on: "&dAlliance chat mode enabled! Everything you type goes to your clan and allies."
+  toggled-off: "&cClan chat mode disabled. You are now typing in public chat."
+  mode-reset: "&cYou are no longer in a clan - clan chat mode was disabled and your message was not sent."
 
 # Tag colors
 color:
-  changed: "&aTag color changed to: {color}{clan}"
-  invalid: "&cInvalid color! Available: {colors}"
-  available: "&aAvailable colors: &f{colors}"
+  tag-changed: "&aTag color changed! New tag: {tag}"
+  invalid: "&cInvalid color! Available: &f{colors}"
+  available: "&aAvailable colors: {colors}"
 
 # PvP
 pvp:
   enabled: "&aClan PvP has been enabled!"
   disabled: "&cClan PvP has been disabled!"
+  status: "&7Clan PvP is currently: {status}"
   status-enabled: "&aEnabled"
   status-disabled: "&cDisabled"
   blocked: "&cYou cannot attack a member of your clan!"
+  blocked-ally: "&cYou cannot attack an ally!"
 
 # Ranking
 ranking:
-  header: "&6&l=== TOP 10 Clans (Kills) ==="
-  format: "&e#{position} &6{clan} &7- &e{kills} kills"
-  footer: "&6&l============================"
+  title: "&6&l=== TOP {count} clans ({type}) ==="
+  format: "&e#{position} {tag} &7- &e{kills} &7kills | &e{deaths} &7deaths | KDR &e{kdr} &7| &e{members} &7members"
+  footer: "&6&l================================"
   no-clans: "&cNo clans to display!"
+  types:
+    kills: "kills"
+    kdr: "KDR"
+    members: "members"
 
-# Kill notifications
+# Player statistics
+stats:
+  header: "&6Statistics of {player}:"
+  kills: "&7Kills: &e{kills}"
+  deaths: "&7Deaths: &e{deaths}"
+  kdr: "&7KDR: &e{kdr}"
+  clan: "&7Clan: &e{clan}"
+
+# Kill notifications (ranking.broadcast-kills in config.yml)
 kill:
   clan-kill: "&6{killer} &efrom clan &6{clan} &akilled &c{victim}&a!"
 
+# Alliances
+alliance:
+  disabled: "&cAlliances are disabled on this server."
+  self: "&cYou cannot ally with your own clan!"
+  already-allied: "&cYour clan is already allied with clan &6{clan}&c!"
+  already-requested: "&cYou have already sent an alliance request to clan &6{clan}&c. Wait for a response."
+  limit-own: "&cYour clan has reached the alliance limit ({max})!"
+  limit-other: "&cClan &6{clan} &chas reached the alliance limit ({max})!"
+  request-sent: "&aAlliance request sent to clan &6{clan}&a!"
+  request-received: "&dClan &6{clan} &dproposes an alliance! The leader can type &e/clan ally accept {clan} &dor &e/clan ally deny {clan}&d. &7(valid for {seconds}s)"
+  formed: "&d&lALLIANCE! &dYour clan is now allied with clan &6{clan}&d!"
+  no-request: "&cYou don't have an alliance request from clan &6{clan}&c!"
+  no-requests: "&cYour clan has no alliance requests."
+  incoming: "&eAlliance requests from: &6{clans}"
+  request-denied: "&eYou declined the alliance request from clan &6{clan}&e."
+  request-denied-notify: "&cClan &6{clan} &cdeclined your alliance request."
+  request-cancelled: "&eYou cancelled the alliance request to clan &6{clan}&e."
+  request-cancelled-notify: "&eClan &6{clan} &ewithdrew its alliance request."
+  no-outgoing-request: "&cYou haven't sent an alliance request to clan &6{clan}&c!"
+  not-allied: "&cYour clan is not allied with clan &6{clan}&c!"
+  broken: "&cThe alliance with clan &6{clan} &chas been broken!"
+  ally-disbanded: "&cAllied clan &6{clan} &chas been disbanded - the alliance has ended."
+  no-allies: "&cYour clan has no allies!"
+  list-header: "&dClan allies &7({count}/{max}):"
+  list-none: "&7- no allies"
+  list-entry: "&7- {tag} &7leader: &e{leader} &7members: &e{members} &7(online: &a{online}&7)"
+  list-incoming: "&ePending requests from: &6{clans}"
+  list-outgoing: "&eSent requests to: &6{clans}"
+
+# Admin commands
+admin:
+  reloaded: "&aConfiguration and language file reloaded &7({lang})&a!"
+  disbanded: "&aClan &6{clan} &ahas been disbanded by an administrator."
+  disband-confirm: "&c&lWARNING! &cClan &6{clan} &cwill be deleted forever. Type &e/clan admin disband {clan} {confirm} &cwithin {seconds}s."
+  player-not-in-clan: "&cPlayer &6{player} &cis not in any clan!"
+  kicked: "&aPlayer &6{player} &ahas been removed from clan &6{clan}&a."
+  added: "&aPlayer &6{player} &ahas been added to clan &6{clan}&a."
+  leader-set: "&aPlayer &6{player} &ais now the leader of clan &6{clan}&a."
+  stats-reset-clan: "&aStatistics of clan &6{clan} &ahave been reset."
+  stats-reset-player: "&aStatistics of player &6{player} &ahave been reset."
+
+# Command usage
+usage:
+  create: "&cUsage: /clan create <name>"
+  invite: "&cUsage: /clan invite <player>"
+  accept: "&cUsage: /clan accept <clan>"
+  deny: "&cUsage: /clan deny <clan>"
+  promote: "&cUsage: /clan promote <player>"
+  demote: "&cUsage: /clan demote <player>"
+  kick: "&cUsage: /clan kick <player>"
+  leader: "&cUsage: /clan leader <player>"
+  chat: "&cUsage: /clan chat <message>"
+  pvp: "&cUsage: /clan pvp <on/off>"
+  info: "&cUsage: /clan info <clan>"
+  ranking: "&cUsage: /clan top [kills/kdr/members]"
+  stats: "&cUsage: /clan stats <player>"
+  ally-invite: "&cUsage: /clan ally invite <clan>"
+  ally-accept: "&cUsage: /clan ally accept <clan>"
+  ally-deny: "&cUsage: /clan ally deny <clan>"
+  ally-cancel: "&cUsage: /clan ally cancel <clan>"
+  ally-break: "&cUsage: /clan ally break <clan>"
+  admin-disband: "&cUsage: /clan admin disband <clan>"
+  admin-kick: "&cUsage: /clan admin kick <player>"
+  admin-add: "&cUsage: /clan admin add <clan> <player>"
+  admin-leader: "&cUsage: /clan admin setleader <clan> <player>"
+  admin-resetstats: "&cUsage: /clan admin resetstats <clan/player> <name>"
+
+# Additional errors
+errors:
+  cannot-promote-leader: "&cYou cannot promote the leader to deputy!"
+
 # Help
 help:
-  header: "&6Available SimpleClan commands:"
-  format: "&e/{command} &7- {description}"
-  commands:
-    create: "Creates a new clan"
-    invite: "Invites a player to the clan"
-    accept: "Accepts a clan invitation"
-    leave: "Leaves the clan"
-    disband: "Disbands the clan (leader only)"
-    list: "Displays the list of clan members"
-    info: "Displays clan information"
-    promote: "Promotes a member to moderator (leader only)"
-    demote: "Demotes a moderator (leader only)"
-    kick: "Kicks a player from the clan (leader/moderator)"
-    chat: "Sends a message to clan chat"
-    cc: "Toggles clan chat mode"
-    color: "Changes the clan tag color"
-    pvp: "Enables/disables PvP in the clan (leader)"
-    ranking: "Displays the clan ranking"
+  player:
+    - "&6&l=== SimpleClan - commands ==="
+    - "&e/clan create <name> &7- Creates a new clan"
+    - "&e/clan invite <player> &7- Invites a player to the clan (leader/deputy)"
+    - "&e/clan accept [clan] &7- Accepts a clan invitation"
+    - "&e/clan deny [clan] &7- Declines a clan invitation"
+    - "&e/clan leave &7- Leaves the clan"
+    - "&e/clan disband &7- Disbands the clan (leader, requires confirmation)"
+    - "&e/clan leader <player> &7- Transfers leadership (leader)"
+    - "&e/clan list &7- Shows clan members"
+    - "&e/clan info [clan] &7- Shows clan information"
+    - "&e/clan promote <player> &7- Appoints a deputy (leader)"
+    - "&e/clan demote <player> &7- Demotes a deputy (leader)"
+    - "&e/clan kick <player> &7- Kicks a player from the clan (leader/deputy)"
+    - "&e/clan chat <message> &7- Sends a message to clan chat"
+    - "&e/clan cc &7- Toggles clan chat mode"
+    - "&e/clan ac [message] &7- Alliance chat (without a message: toggles mode)"
+    - "&e/clan color [color] &7- Changes the clan tag color (leader)"
+    - "&e/clan pvp <on/off> &7- Enables/disables clan PvP (leader)"
+    - "&e/clan ally &7- Alliance management"
+    - "&e/clan top [kills/kdr/members] &7- Clan ranking"
+    - "&e/clan stats [player] &7- Player statistics"
+  alliance:
+    - "&d&l=== Alliances ==="
+    - "&e/clan ally invite <clan> &7- Sends an alliance request (leader)"
+    - "&e/clan ally accept [clan] &7- Accepts an alliance request (leader)"
+    - "&e/clan ally deny [clan] &7- Declines an alliance request (leader)"
+    - "&e/clan ally cancel <clan> &7- Withdraws a sent request (leader)"
+    - "&e/clan ally break <clan> &7- Breaks an alliance (leader)"
+    - "&e/clan ally list &7- Lists allies and requests"
+    - "&e/clan ac [message] &7- Chat with allies"
+  admin:
+    - "&c&l=== SimpleClan - administration ==="
+    - "&e/clan admin reload &7- Reloads config and language"
+    - "&e/clan admin disband <clan> &7- Deletes a clan (requires confirmation)"
+    - "&e/clan admin kick <player> &7- Removes a player from their clan"
+    - "&e/clan admin add <clan> <player> &7- Adds a player to a clan"
+    - "&e/clan admin setleader <clan> <player> &7- Sets the clan leader"
+    - "&e/clan admin resetstats <clan/player> <name> &7- Resets statistics"
+  admin-hint: "&cAdministration: &e/clan admin"

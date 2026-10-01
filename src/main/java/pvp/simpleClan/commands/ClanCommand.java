@@ -7,799 +7,682 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import pvp.simpleClan.SimpleClan;
 import pvp.simpleClan.data.Clan;
-import pvp.simpleClan.managers.ClanManager;
+import pvp.simpleClan.data.PlayerStats;
+import pvp.simpleClan.managers.ChatManager;
+import pvp.simpleClan.managers.ChatManager.ChatMode;
+import pvp.simpleClan.managers.LangManager;
+import pvp.simpleClan.managers.ClanManager.CreateResult;
+import pvp.simpleClan.managers.ClanManager.RankingType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-public class ClanCommand implements CommandExecutor {
+public class ClanCommand extends CommandBase implements CommandExecutor {
 
-    private final SimpleClan plugin;
-    private final ClanManager clanManager;
+    private final AllianceCommand allianceCommand;
+    private final AdminCommand adminCommand;
 
     public ClanCommand(SimpleClan plugin) {
-        this.plugin = plugin;
-        this.clanManager = plugin.getClanManager();
+        super(plugin);
+        this.allianceCommand = new AllianceCommand(plugin);
+        this.adminCommand = new AdminCommand(plugin);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(plugin.getPrefix() + plugin.getMessage("player-only"));
-            return true;
-        }
-
-        Player player = (Player) sender;
-
         if (args.length == 0) {
-            showHelp(player);
+            showHelp(sender);
             return true;
         }
 
-        switch (args[0].toLowerCase()) {
-            case "stworz":
-            case "create":
-                handleCreate(player, args);
-                break;
-            case "zapros":
-            case "invite":
-                handleInvite(player, args);
-                break;
-            case "akceptuj":
-            case "accept":
-                handleAccept(player);
-                break;
-            case "opusc":
-            case "leave":
-                handleLeave(player);
-                break;
-            case "rozwiaz":
-            case "disband":
-                handleDisband(player);
-                break;
-            case "lista":
-            case "list":
-                handleList(player);
-                break;
-            case "info":
-                handleInfo(player, args);
-                break;
-            case "zastepca":
-            case "mod":
-            case "moderator":
-                handlePromote(player, args);
-                break;
-            case "degraduj":
-            case "demote":
-                handleDemote(player, args);
-                break;
-            case "wyrzuc":
-            case "kick":
-                handleKick(player, args);
-                break;
-            case "chat":
-            case "c":
-                handleChat(player, args);
-                break;
-            case "cc":
-            case "clanchat":
-                handleClanChatToggle(player);
-                break;
-            case "kolor":
-            case "color":
-                handleColor(player, args);
-                break;
-            case "pvp":
-                handlePvP(player, args);
-                break;
-            case "ranking":
-            case "top":
-                handleRanking(player);
-                break;
-            case "pomoc":
-            case "help":
-                showHelp(player);
-                break;
-            default:
-                player.sendMessage(plugin.getPrefix() + plugin.getMessage("unknown-command"));
-                break;
+        SubCommand sub = SubCommand.match(args[0]);
+        if (sub == null) {
+            lang.send(sender, "unknown-command");
+            return true;
         }
 
+        if (!(sender instanceof Player player)) {
+            if (!sub.isConsoleAllowed()) {
+                lang.send(sender, "player-only");
+                return true;
+            }
+            switch (sub) {
+                case INFO -> handleInfo(sender, args);
+                case RANKING -> handleRanking(sender, args);
+                case STATS -> handleStats(sender, args);
+                case ADMIN -> adminCommand.handle(sender, args);
+                default -> showHelp(sender);
+            }
+            return true;
+        }
+
+        switch (sub) {
+            case CREATE -> handleCreate(player, args);
+            case INVITE -> handleInvite(player, args);
+            case ACCEPT -> handleAccept(player, args);
+            case DENY -> handleDeny(player, args);
+            case LEAVE -> handleLeave(player);
+            case DISBAND -> handleDisband(player, args);
+            case LIST -> handleList(player);
+            case INFO -> handleInfo(player, args);
+            case PROMOTE -> handlePromote(player, args);
+            case DEMOTE -> handleDemote(player, args);
+            case KICK -> handleKick(player, args);
+            case LEADER -> handleLeader(player, args);
+            case CHAT -> handleChat(player, args);
+            case CLAN_CHAT -> handleClanChat(player, args);
+            case ALLY_CHAT -> handleAllyChat(player, args);
+            case COLOR -> handleColor(player, args);
+            case PVP -> handlePvP(player, args);
+            case RANKING -> handleRanking(player, args);
+            case STATS -> handleStats(player, args);
+            case ALLY -> allianceCommand.handle(player, args);
+            case ADMIN -> adminCommand.handle(player, args);
+            case HELP -> showHelp(player);
+        }
         return true;
     }
 
+    // ===== Tworzenie i członkostwo =====
+
     private void handleCreate(Player player, String[] args) {
-        if (!player.hasPermission("simpleclan.create")) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("no-permission"));
+        if (!checkPermission(player, "simpleclan.create")) {
             return;
         }
-
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan stworz <nazwa>");
-            return;
-        }
-
-        if (clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("already-in-clan"));
+            lang.send(player, "usage.create");
             return;
         }
 
         String clanName = args[1];
-
-        // Sprawdź długość nazwy
-        int minLength = plugin.getConfig().getInt("clan.min-name-length", 3);
-        int maxLength = plugin.getConfig().getInt("clan.max-name-length", 16);
-
-        if (clanName.length() < minLength) {
-            player.sendMessage(plugin.getPrefix() +
-                    plugin.getMessage("name-too-short").replace("{min}", String.valueOf(minLength)));
-            return;
-        }
-
-        if (clanName.length() > maxLength) {
-            player.sendMessage(plugin.getPrefix() +
-                    plugin.getMessage("name-too-long").replace("{max}", String.valueOf(maxLength)));
-            return;
-        }
-
-        if (clanManager.createClan(player, clanName)) {
-            player.sendMessage(plugin.getPrefix() +
-                    plugin.getMessage("clan-created").replace("{clan}", clanName));
-        } else {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("clan-already-exists"));
+        CreateResult result = clanManager.createClan(player, clanName);
+        switch (result) {
+            case SUCCESS -> lang.send(player, "clan.created", "clan", clanName);
+            case ALREADY_IN_CLAN -> lang.send(player, "membership.already-in-clan");
+            case NAME_TAKEN -> lang.send(player, "clan.already-exists");
+            case TOO_SHORT -> lang.send(player, "name.too-short",
+                    "min", plugin.getConfig().getInt("clan.min-name-length", 3));
+            case TOO_LONG -> lang.send(player, "name.too-long",
+                    "max", plugin.getConfig().getInt("clan.max-name-length", 16));
+            case INVALID_CHARACTERS -> lang.send(player, "name.invalid-characters");
         }
     }
 
     private void handleInvite(Player player, String[] args) {
-        if (!player.hasPermission("simpleclan.invite")) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("no-permission"));
+        if (!checkPermission(player, "simpleclan.invite")) {
             return;
         }
-
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan zapros <gracz>");
+            lang.send(player, "usage.invite");
             return;
         }
 
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
+        Clan clan = requireLeaderOrModerator(player);
+        if (clan == null) {
             return;
         }
 
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (!clan.isLeaderOrModerator(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-leader-or-mod"));
+        // getPlayerExact - bez dopasowywania po początku nicku
+        Player target = Bukkit.getPlayerExact(args[1]);
+        if (target == null) {
+            lang.send(player, "membership.player-not-found");
             return;
         }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null || !target.isOnline()) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-not-found"));
-            return;
-        }
-
         if (clanManager.hasPlayerClan(target.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-already-in-clan"));
+            lang.send(player, "membership.player-already-in-clan");
+            return;
+        }
+        if (clanManager.hasInvite(target.getUniqueId(), clan)) {
+            lang.send(player, "invite.already-invited", "player", target.getName());
+            return;
+        }
+        if (clanManager.isFull(clan)) {
+            lang.send(player, "clan.full");
             return;
         }
 
-        // Sprawdź czy klan nie jest pełny
-        int maxMembers = plugin.getConfig().getInt("clan.max-members", 10);
-        if (clan.getMemberCount() >= maxMembers) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("clan-full"));
-            return;
-        }
-
-        clanManager.invitePlayer(player, target);
-
-        player.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("invite-sent").replace("{player}", target.getName()));
-        target.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("invite-received").replace("{clan}", clan.getName()));
+        clanManager.invite(clan, target.getUniqueId());
+        int seconds = plugin.getConfig().getInt("clan.invite-expire-seconds", 120);
+        lang.send(player, "invite.sent", "player", target.getName());
+        lang.send(target, "invite.received", "clan", clan.getName(), "seconds", seconds);
     }
 
-    private void handleAccept(Player player) {
-        if (!clanManager.hasInvite(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("no-invite"));
-            return;
+    /**
+     * Wybiera zaproszenie: po nazwie klanu albo jedyne istniejące
+     *
+     * @return wybrany klan albo null (komunikat został już wysłany)
+     */
+    private Clan selectInvite(Player player, String[] args, String usagePath) {
+        List<Clan> invites = clanManager.getInvites(player.getUniqueId());
+        if (invites.isEmpty()) {
+            lang.send(player, "invite.no-invite");
+            return null;
         }
+        if (args.length >= 2) {
+            for (Clan clan : invites) {
+                if (clan.getName().equalsIgnoreCase(args[1])) {
+                    return clan;
+                }
+            }
+            lang.send(player, "invite.no-invite-from", "clan", args[1]);
+            return null;
+        }
+        if (invites.size() > 1) {
+            lang.send(player, "invite.multiple", "clans", clanNames(invites));
+            lang.send(player, usagePath);
+            return null;
+        }
+        return invites.get(0);
+    }
 
+    private void handleAccept(Player player, String[] args) {
         if (clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("already-in-clan"));
+            lang.send(player, "membership.already-in-clan");
             return;
         }
 
-        String clanName = clanManager.getInviteClanName(player.getUniqueId());
-        Clan clan = clanManager.getClan(clanName);
-
-        if (clanManager.acceptInvite(player)) {
-            player.sendMessage(plugin.getPrefix() +
-                    plugin.getMessage("joined-clan").replace("{clan}", clan.getName()));
-        } else {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("clan-full"));
+        Clan clan = selectInvite(player, args, "usage.accept");
+        if (clan == null) {
+            return;
         }
+        if (clanManager.isFull(clan)) {
+            lang.send(player, "clan.full");
+            return;
+        }
+
+        clanManager.addMember(clan, player.getUniqueId());
+        lang.send(player, "invite.joined-clan", "clan", clan.getName());
+        broadcastClanExcept(clan, player.getUniqueId(), "invite.accepted", "player", player.getName());
+    }
+
+    private void handleDeny(Player player, String[] args) {
+        Clan clan = selectInvite(player, args, "usage.deny");
+        if (clan == null) {
+            return;
+        }
+
+        clanManager.removeInvite(player.getUniqueId(), clan);
+        lang.send(player, "invite.denied", "clan", clan.getName());
+        notifyManagers(clan, "invite.denied-notify", "player", player.getName());
     }
 
     private void handleLeave(Player player) {
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
+        Clan clan = requireClan(player);
+        if (clan == null) {
             return;
         }
 
-        if (clanManager.leaveClan(player)) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("left-clan"));
+        // Lider musi najpierw przekazać przywództwo albo rozwiązać klan
+        if (clan.isLeader(player.getUniqueId())) {
+            lang.send(player, "leave.leader-cannot-leave");
+            return;
         }
+
+        clanManager.removeMember(clan, player.getUniqueId());
+        lang.send(player, "leave.left-clan");
+        broadcastClan(clan, "leave.player-left", "player", player.getName());
     }
 
-    private void handleDisband(Player player) {
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
+    private void handleDisband(Player player, String[] args) {
+        Clan clan = requireLeader(player);
+        if (clan == null) {
             return;
         }
 
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (!clan.isLeader(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-leader"));
+        if (args.length >= 2 && SubCommand.isConfirmWord(args[1])) {
+            if (!confirmations.consume(player, "disband", clan.getKey())) {
+                lang.send(player, "confirm.nothing-pending");
+                return;
+            }
+            disbandAndNotify(clan);
             return;
         }
 
-        clanManager.disbandClan(player);
+        confirmations.request(player, "disband", clan.getKey());
+        lang.send(player, "disband.confirm",
+                "clan", clan.getName(),
+                "seconds", confirmations.getTimeoutSeconds(),
+                "confirm", confirmWord());
     }
+
+    // ===== Informacje =====
 
     private void handleList(Player player) {
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
+        Clan clan = requireClan(player);
+        if (clan != null) {
+            showMembers(player, clan);
+        }
+    }
+
+    private void handleInfo(CommandSender sender, String[] args) {
+        Clan clan;
+        if (args.length >= 2) {
+            clan = clanManager.getClan(args[1]);
+            if (clan == null) {
+                lang.send(sender, "clan.not-found");
+                return;
+            }
+        } else if (sender instanceof Player player) {
+            clan = requireClan(player);
+            if (clan == null) {
+                return;
+            }
+        } else {
+            lang.send(sender, "usage.info");
             return;
         }
 
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        player.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("members-header").replace("{clan}", clan.getName()));
-
-        for (UUID memberUuid : clan.getMembers()) {
-            Player member = Bukkit.getPlayer(memberUuid);
-            String playerName;
-            if (member != null) {
-                playerName = member.getName();
-            } else {
-                String offlineName = Bukkit.getOfflinePlayer(memberUuid).getName();
-                playerName = offlineName != null ? offlineName : "Unknown";
-            }
-
-            String status;
-            if (clan.isLeader(memberUuid)) {
-                status = plugin.getMessage("leader-status");
-            } else if (clan.isModerator(memberUuid)) {
-                status = plugin.getMessage("moderator-status");
-            } else {
-                status = plugin.getMessage("member-status");
-            }
-
-            player.sendMessage(plugin.getMessage("member-format")
-                    .replace("{player}", playerName)
-                    .replace("{status}", status));
-        }
-    }
-
-    private void handleInfo(Player player, String[] args) {
-        Clan clan;
-
-        if (args.length < 2) {
-            // Pokaż info o własnym klanie
-            if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-                player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
-                return;
-            }
-            clan = clanManager.getPlayerClan(player.getUniqueId());
-        } else {
-            // Pokaż info o konkretnym klanie
-            clan = clanManager.getClan(args[1]);
-            if (clan == null) {
-                player.sendMessage(plugin.getPrefix() + plugin.getMessage("clan-not-found"));
-                return;
-            }
-        }
-
-        Player leader = Bukkit.getPlayer(clan.getLeader());
-        String leaderName;
-        if (leader != null) {
-            leaderName = leader.getName();
-        } else {
-            String offlineName = Bukkit.getOfflinePlayer(clan.getLeader()).getName();
-            leaderName = offlineName != null ? offlineName : "Unknown";
-        }
-        int maxMembers = plugin.getConfig().getInt("clan.max-members", 10);
-
-        // Lista zastępców
-        StringBuilder moderators = new StringBuilder();
+        List<String> moderatorNames = new ArrayList<>();
         for (UUID modUuid : clan.getModerators()) {
-            Player mod = Bukkit.getPlayer(modUuid);
-            String modName;
-            if (mod != null) {
-                modName = mod.getName();
-            } else {
-                String offlineName = Bukkit.getOfflinePlayer(modUuid).getName();
-                modName = offlineName != null ? offlineName : "Unknown";
-            }
-            if (moderators.length() > 0) {
-                moderators.append(", ");
-            }
-            moderators.append(modName);
+            moderatorNames.add(statsManager.getName(modUuid));
         }
-        String moderatorsText = moderators.length() > 0 ? moderators.toString() : "Brak";
+        Collections.sort(moderatorNames, String.CASE_INSENSITIVE_ORDER);
+        String none = lang.get("general.none");
 
-        player.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("clan-info-header").replace("{clan}", clan.getName()));
-        player.sendMessage(plugin.getMessage("clan-info-leader").replace("{leader}", leaderName));
-        player.sendMessage(plugin.getMessage("clan-info-moderators").replace("{moderators}", moderatorsText));
-        player.sendMessage(plugin.getMessage("clan-info-members")
-                .replace("{count}", String.valueOf(clan.getMemberCount()))
-                .replace("{max}", String.valueOf(maxMembers)));
-        player.sendMessage(plugin.getMessage("clan-info-created").replace("{date}", clan.getFormattedCreatedDate()));
-        player.sendMessage(plugin.getMessage("info.tag-color")
-                .replace("{color}", clan.getTagColor())
-                .replace("{clan}", clan.getName()));
-        player.sendMessage(plugin.getMessage("info.pvp")
-                .replace("{status}", clan.isPvpEnabled() ?
-                        plugin.getMessage("pvp.status-enabled") : plugin.getMessage("pvp.status-disabled")));
-        player.sendMessage(plugin.getMessage("info.kills")
-                .replace("{kills}", String.valueOf(clan.getKills())));
+        List<Clan> allies = clanManager.getAllies(clan);
 
-        // Dodaj listę wszystkich członków
-        player.sendMessage("");
-        player.sendMessage(plugin.getMessage("members-header").replace("{clan}", clan.getName()));
+        lang.send(sender, "info.header", "clan", clan.getName());
+        lang.sendRaw(sender, "info.leader", "leader", statsManager.getName(clan.getLeader()));
+        lang.sendRaw(sender, "info.moderators",
+                "moderators", moderatorNames.isEmpty() ? none : String.join(", ", moderatorNames));
+        lang.sendRaw(sender, "info.members",
+                "count", clan.getMemberCount(), "max", clanManager.getMaxMembers(), "online", countOnline(clan));
+        lang.sendRaw(sender, "info.created", "date", clan.getFormattedCreatedDate());
+        lang.sendRaw(sender, "info.tag", "tag", clanManager.getClanTag(clan));
+        lang.sendRaw(sender, "info.pvp", "status",
+                lang.get(clan.isPvpEnabled() ? "pvp.status-enabled" : "pvp.status-disabled"));
+        lang.sendRaw(sender, "info.stats",
+                "kills", clan.getKills(),
+                "deaths", clan.getDeaths(),
+                "kdr", PlayerStats.formatKdr(clan.getKdr()),
+                "rank", clanManager.getRank(clan));
+        if (clanManager.isAllianceEnabled()) {
+            lang.sendRaw(sender, "info.allies", "allies", allies.isEmpty() ? none : clanNames(allies));
+        }
 
-        for (UUID memberUuid : clan.getMembers()) {
-            Player member = Bukkit.getPlayer(memberUuid);
-            String playerName;
-            if (member != null) {
-                playerName = member.getName();
-            } else {
-                String offlineName = Bukkit.getOfflinePlayer(memberUuid).getName();
-                playerName = offlineName != null ? offlineName : "Unknown";
-            }
+        sender.sendMessage("");
+        showMembers(sender, clan);
+    }
 
+    private void showMembers(CommandSender sender, Clan clan) {
+        lang.sendRaw(sender, "members.header", "clan", clan.getName(), "count", clan.getMemberCount());
+
+        // Kolejność: lider, zastępcy, członkowie - alfabetycznie w grupach
+        List<UUID> members = new ArrayList<>(clan.getMembers());
+        members.sort(Comparator
+                .comparingInt((UUID uuid) -> clan.isLeader(uuid) ? 0 : clan.isModerator(uuid) ? 1 : 2)
+                .thenComparing(statsManager::getName, String.CASE_INSENSITIVE_ORDER));
+
+        for (UUID memberUuid : members) {
             String status;
             if (clan.isLeader(memberUuid)) {
-                status = plugin.getMessage("leader-status");
+                status = lang.get("members.leader-status");
             } else if (clan.isModerator(memberUuid)) {
-                status = plugin.getMessage("moderator-status");
+                status = lang.get("members.moderator-status");
             } else {
-                status = plugin.getMessage("member-status");
+                status = lang.get("members.member-status");
             }
+            String online = lang.get(Bukkit.getPlayer(memberUuid) != null ? "members.online" : "members.offline");
 
-            player.sendMessage(plugin.getMessage("member-format")
-                    .replace("{player}", playerName)
-                    .replace("{status}", status));
+            lang.sendRaw(sender, "members.format",
+                    "player", statsManager.getName(memberUuid),
+                    "status", status,
+                    "online", online);
         }
     }
+
+    private void handleRanking(CommandSender sender, String[] args) {
+        RankingType type = RankingType.KILLS;
+        if (args.length >= 2) {
+            type = switch (args[1].toLowerCase(Locale.ROOT)) {
+                case "zabojstwa", "zabójstwa", "kills" -> RankingType.KILLS;
+                case "kdr" -> RankingType.KDR;
+                case "czlonkowie", "członkowie", "members" -> RankingType.MEMBERS;
+                default -> null;
+            };
+            if (type == null) {
+                lang.send(sender, "usage.ranking");
+                return;
+            }
+        }
+
+        List<Clan> ranking = clanManager.getRanking(type);
+        if (ranking.isEmpty()) {
+            lang.send(sender, "ranking.no-clans");
+            return;
+        }
+
+        int topClans = Math.max(1, plugin.getConfig().getInt("ranking.top-clans", 10));
+        List<Clan> top = ranking.subList(0, Math.min(topClans, ranking.size()));
+
+        lang.sendRaw(sender, "ranking.title",
+                "type", lang.get("ranking.types." + type.name().toLowerCase(Locale.ROOT)),
+                "count", top.size());
+
+        int position = 1;
+        for (Clan clan : top) {
+            lang.sendRaw(sender, "ranking.format",
+                    "position", position++,
+                    "clan", clan.getName(),
+                    "tag", clanManager.getClanTag(clan),
+                    "kills", clan.getKills(),
+                    "deaths", clan.getDeaths(),
+                    "kdr", PlayerStats.formatKdr(clan.getKdr()),
+                    "members", clan.getMemberCount());
+        }
+
+        lang.sendRaw(sender, "ranking.footer");
+    }
+
+    private void handleStats(CommandSender sender, String[] args) {
+        UUID target;
+        if (args.length >= 2) {
+            target = statsManager.findPlayer(args[1]);
+            if (target == null) {
+                lang.send(sender, "membership.player-not-found");
+                return;
+            }
+        } else if (sender instanceof Player player) {
+            target = player.getUniqueId();
+        } else {
+            lang.send(sender, "usage.stats");
+            return;
+        }
+
+        Clan clan = clanManager.getPlayerClan(target);
+        lang.send(sender, "stats.header", "player", statsManager.getName(target));
+        lang.sendRaw(sender, "stats.kills", "kills", statsManager.getKills(target));
+        lang.sendRaw(sender, "stats.deaths", "deaths", statsManager.getDeaths(target));
+        lang.sendRaw(sender, "stats.kdr", "kdr", PlayerStats.formatKdr(statsManager.getKdr(target)));
+        lang.sendRaw(sender, "stats.clan", "clan", clan != null ? clan.getName() : lang.get("general.none"));
+    }
+
+    // ===== Zarządzanie członkami =====
 
     private void handlePromote(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan zastepca <gracz>");
+            lang.send(player, "usage.promote");
+            return;
+        }
+        Clan clan = requireLeader(player);
+        if (clan == null) {
             return;
         }
 
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
+        UUID target = clanManager.findMember(clan, args[1]);
+        if (target == null) {
+            lang.send(player, "membership.not-member", "player", args[1]);
             return;
         }
-
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (!clan.isLeader(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-leader"));
+        if (clan.isLeader(target)) {
+            lang.send(player, "errors.cannot-promote-leader");
             return;
         }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null || !target.isOnline()) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-not-found"));
+        if (clan.isModerator(target)) {
+            lang.send(player, "moderator.already-moderator");
             return;
         }
-
-        if (!clan.isMember(target.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-not-found"));
-            return;
-        }
-
-        if (clan.isLeader(target.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + "&cNie możesz mianować lidera zastępcą!");
-            return;
-        }
-
-        if (clan.isModerator(target.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("already-moderator"));
-            return;
-        }
-
-        int maxModerators = plugin.getConfig().getInt("clan.max-moderators", 2);
+        int maxModerators = clanManager.getMaxModerators();
         if (clan.getModeratorCount() >= maxModerators) {
-            player.sendMessage(plugin.getPrefix() +
-                    plugin.getMessage("max-moderators").replace("{max}", String.valueOf(maxModerators)));
+            lang.send(player, "moderator.max-moderators", "max", maxModerators);
             return;
         }
 
-        clan.addModerator(target.getUniqueId());
-        clanManager.saveData();
+        clan.addModerator(target);
+        clanManager.saveSoon();
 
-        player.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("mod-added").replace("{player}", target.getName()));
-        target.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("player-promoted").replace("{clan}", clan.getName()));
+        String targetName = statsManager.getName(target);
+        lang.send(player, "moderator.added", "player", targetName);
+        Player online = Bukkit.getPlayer(target);
+        if (online != null) {
+            lang.send(online, "moderator.player-promoted", "clan", clan.getName());
+        }
     }
 
     private void handleDemote(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan degraduj <gracz>");
+            lang.send(player, "usage.demote");
+            return;
+        }
+        Clan clan = requireLeader(player);
+        if (clan == null) {
             return;
         }
 
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
+        UUID target = clanManager.findMember(clan, args[1]);
+        if (target == null) {
+            lang.send(player, "membership.not-member", "player", args[1]);
+            return;
+        }
+        if (clan.isLeader(target)) {
+            lang.send(player, "kick.cannot-demote-leader");
+            return;
+        }
+        if (!clan.isModerator(target)) {
+            lang.send(player, "moderator.not-moderator");
             return;
         }
 
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (!clan.isLeader(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-leader"));
-            return;
+        clan.removeModerator(target);
+        clanManager.saveSoon();
+
+        lang.send(player, "moderator.removed", "player", statsManager.getName(target));
+        Player online = Bukkit.getPlayer(target);
+        if (online != null) {
+            lang.send(online, "moderator.player-demoted");
         }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null || !target.isOnline()) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-not-found"));
-            return;
-        }
-
-        if (!clan.isMember(target.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-not-found"));
-            return;
-        }
-
-        if (clan.isLeader(target.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("cannot-demote-leader"));
-            return;
-        }
-
-        if (!clan.isModerator(target.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-moderator"));
-            return;
-        }
-
-        clan.removeModerator(target.getUniqueId());
-        clanManager.saveData();
-
-        player.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("mod-removed").replace("{player}", target.getName()));
-        target.sendMessage(plugin.getPrefix() + plugin.getMessage("player-demoted"));
     }
 
     private void handleKick(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan wyrzuc <gracz>");
+            lang.send(player, "usage.kick");
+            return;
+        }
+        Clan clan = requireLeaderOrModerator(player);
+        if (clan == null) {
             return;
         }
 
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-in-clan"));
+        UUID target = clanManager.findMember(clan, args[1]);
+        if (target == null) {
+            lang.send(player, "membership.not-member", "player", args[1]);
+            return;
+        }
+        if (target.equals(player.getUniqueId())) {
+            lang.send(player, "kick.cannot-kick-yourself");
+            return;
+        }
+        if (clan.isLeader(target)) {
+            lang.send(player, "kick.cannot-kick-leader");
+            return;
+        }
+        // Tylko lider może wyrzucać zastępców
+        if (clan.isModerator(target) && !clan.isLeader(player.getUniqueId())) {
+            lang.send(player, "kick.cannot-kick-moderator");
             return;
         }
 
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (!clan.isLeaderOrModerator(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("not-leader-or-mod"));
+        String targetName = statsManager.getName(target);
+        clanManager.removeMember(clan, target);
+
+        Player online = Bukkit.getPlayer(target);
+        if (online != null) {
+            lang.send(online, "kick.player-kicked", "clan", clan.getName());
+        }
+        broadcastClan(clan, "kick.member-kicked", "player", targetName);
+    }
+
+    private void handleLeader(Player player, String[] args) {
+        if (args.length < 2) {
+            lang.send(player, "usage.leader");
+            return;
+        }
+        Clan clan = requireLeader(player);
+        if (clan == null) {
             return;
         }
 
-        Player target = Bukkit.getPlayer(args[1]);
-        UUID targetUuid;
-        String targetName;
+        UUID target = clanManager.findMember(clan, args[1]);
+        if (target == null) {
+            lang.send(player, "membership.not-member", "player", args[1]);
+            return;
+        }
+        if (clan.isLeader(target)) {
+            lang.send(player, "leader.already-leader");
+            return;
+        }
 
-        if (target != null && target.isOnline()) {
-            targetUuid = target.getUniqueId();
-            targetName = target.getName();
-        } else {
-            // Sprawdź offline gracza
-            targetName = args[1];
-            boolean found = false;
-            targetUuid = null;
+        String targetName = statsManager.getName(target);
+        String confirmTarget = clan.getKey() + ":" + target;
 
-            for (UUID memberUuid : clan.getMembers()) {
-                Player onlineMember = Bukkit.getPlayer(memberUuid);
-                String memberName;
-                if (onlineMember != null) {
-                    memberName = onlineMember.getName();
-                } else {
-                    memberName = Bukkit.getOfflinePlayer(memberUuid).getName();
-                }
-                if (memberName != null && memberName.equalsIgnoreCase(targetName)) {
-                    targetUuid = memberUuid;
-                    targetName = memberName;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-not-found"));
+        if (args.length >= 3 && SubCommand.isConfirmWord(args[2])) {
+            if (!confirmations.consume(player, "leader", confirmTarget)) {
+                lang.send(player, "confirm.nothing-pending");
                 return;
             }
-        }
-
-        if (!clan.isMember(targetUuid)) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("player-not-found"));
+            clanManager.transferLeadership(clan, target);
+            broadcastClan(clan, "leader.changed", "player", targetName, "old", player.getName());
             return;
         }
 
-        if (targetUuid.equals(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("cannot-kick-yourself"));
-            return;
-        }
-
-        if (clan.isLeader(targetUuid)) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("cannot-kick-leader"));
-            return;
-        }
-
-        // Tylko lider może wyrzucać zastępców
-        if (clan.isModerator(targetUuid) && !clan.isLeader(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("cannot-kick-moderator"));
-            return;
-        }
-
-        // Usuń gracza z klanu
-        clan.removeMember(targetUuid);
-        clanManager.removePlayerFromClan(targetUuid);
-        clanManager.saveData();
-
-        // Powiadom wszystkich
-        player.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("member-kicked").replace("{player}", targetName));
-
-        if (target != null && target.isOnline()) {
-            target.sendMessage(plugin.getPrefix() +
-                    plugin.getMessage("player-kicked").replace("{clan}", clan.getName()));
-        }
-
-        // Powiadom pozostałych członków klanu
-        for (UUID memberUuid : clan.getMembers()) {
-            if (!memberUuid.equals(player.getUniqueId())) {
-                Player member = Bukkit.getPlayer(memberUuid);
-                if (member != null && member.isOnline()) {
-                    member.sendMessage(plugin.getPrefix() +
-                            plugin.getMessage("member-kicked").replace("{player}", targetName));
-                }
-            }
-        }
+        confirmations.request(player, "leader", confirmTarget);
+        lang.send(player, "leader.confirm",
+                "player", targetName,
+                "seconds", confirmations.getTimeoutSeconds(),
+                "confirm", confirmWord());
     }
+
+    // ===== Czat =====
 
     private void handleChat(Player player, String[] args) {
+        if (!checkPermission(player, "simpleclan.chat")) {
+            return;
+        }
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan chat <wiadomość>");
+            lang.send(player, "usage.chat");
             return;
         }
-
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("membership.not-in-clan"));
-            return;
-        }
-
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-
-        // Złącz wszystkie argumenty od indeksu 1 w jedną wiadomość
-        StringBuilder messageBuilder = new StringBuilder();
-        for (int i = 1; i < args.length; i++) {
-            if (i > 1) messageBuilder.append(" ");
-            messageBuilder.append(args[i]);
-        }
-        String message = messageBuilder.toString();
-
-        // Pobierz format i rolę gracza
-        String format = plugin.getConfig().getString("chat.format",
-                "&8[&6Klan&8] &r{role}&e{player}&7: &f{message}");
-
-        String role = "";
-        if (clan.isLeader(player.getUniqueId())) {
-            role = plugin.getConfig().getString("chat.leader-role", "&6[Lider] ");
-        } else if (clan.isModerator(player.getUniqueId())) {
-            role = plugin.getConfig().getString("chat.moderator-role", "&a[Zastępca] ");
-        }
-
-        // Sformatuj wiadomość
-        String formattedMessage = format
-                .replace("{role}", role)
-                .replace("{player}", player.getName())
-                .replace("{message}", message)
-                .replace("&", "§");
-
-        // Wyślij do wszystkich członków klanu
-        for (Player member : Bukkit.getOnlinePlayers()) {
-            if (clan.isMember(member.getUniqueId())) {
-                member.sendMessage(formattedMessage);
-            }
+        Clan clan = requireClan(player);
+        if (clan != null) {
+            plugin.getChatManager().sendClanMessage(player, clan, joinArgs(args, 1));
         }
     }
 
-    private void handleClanChatToggle(Player player) {
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("membership.not-in-clan"));
+    private void handleClanChat(Player player, String[] args) {
+        if (!checkPermission(player, "simpleclan.chat")) {
+            return;
+        }
+        Clan clan = requireClan(player);
+        if (clan == null) {
             return;
         }
 
-        boolean enabled = plugin.getChatListener().getChatManager().toggleClanChat(player.getUniqueId());
-
-        if (enabled) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("chat.toggled-on"));
-        } else {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("chat.toggled-off"));
+        ChatManager chatManager = plugin.getChatManager();
+        if (args.length >= 2) {
+            chatManager.sendClanMessage(player, clan, joinArgs(args, 1));
+            return;
         }
+
+        ChatMode mode = chatManager.toggle(player.getUniqueId(), ChatMode.CLAN);
+        lang.send(player, mode == ChatMode.CLAN ? "chat.toggled-on" : "chat.toggled-off");
     }
+
+    private void handleAllyChat(Player player, String[] args) {
+        if (!clanManager.isAllianceEnabled()) {
+            lang.send(player, "alliance.disabled");
+            return;
+        }
+        if (!checkPermission(player, "simpleclan.chat")) {
+            return;
+        }
+        Clan clan = requireClan(player);
+        if (clan == null) {
+            return;
+        }
+
+        ChatManager chatManager = plugin.getChatManager();
+        boolean switchingOff = chatManager.getMode(player.getUniqueId()) == ChatMode.ALLY && args.length < 2;
+        if (!switchingOff && clanManager.getAllies(clan).isEmpty()) {
+            lang.send(player, "alliance.no-allies");
+            return;
+        }
+
+        if (args.length >= 2) {
+            chatManager.sendAllyMessage(player, clan, joinArgs(args, 1));
+            return;
+        }
+
+        ChatMode mode = chatManager.toggle(player.getUniqueId(), ChatMode.ALLY);
+        lang.send(player, mode == ChatMode.ALLY ? "chat.ally-toggled-on" : "chat.toggled-off");
+    }
+
+    // ===== Ustawienia klanu =====
 
     private void handleColor(Player player, String[] args) {
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("membership.not-in-clan"));
+        Clan clan = requireLeader(player);
+        if (clan == null) {
             return;
         }
 
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (!clan.isLeader(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("membership.not-leader"));
-            return;
-        }
+        List<String> availableColors = plugin.getConfig().getStringList("clan.available-colors");
 
-        // Jeśli brak argumentu, pokaż dostępne kolory
         if (args.length < 2) {
-            List<String> availableColors = plugin.getConfig().getStringList("clan.available-colors");
-            StringBuilder colorsDisplay = new StringBuilder();
+            List<String> preview = new ArrayList<>();
             for (String color : availableColors) {
-                colorsDisplay.append(color.replace("&", "§")).append(clan.getName()).append("&r, ");
+                preview.add(color.replace("&", "") + ": " + LangManager.colorize(color) + clan.getName() + "§r");
             }
-            // Usuń ostatni przecinek
-            if (colorsDisplay.length() > 2) {
-                colorsDisplay.setLength(colorsDisplay.length() - 2);
-            }
-
-            player.sendMessage(plugin.getPrefix() +
-                    plugin.getMessage("color.available").replace("{colors}", colorsDisplay.toString()));
+            lang.send(player, "color.available", "colors", String.join("§7, ", preview));
             return;
         }
 
-        String colorCode = args[1];
-
-        // Dodaj & jeśli nie ma
+        String colorCode = args[1].toLowerCase(Locale.ROOT);
         if (!colorCode.startsWith("&")) {
             colorCode = "&" + colorCode;
         }
 
-        // Sprawdź czy kolor jest dostępny
-        List<String> availableColors = plugin.getConfig().getStringList("clan.available-colors");
         if (!availableColors.contains(colorCode)) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("color.invalid")
-                    .replace("{colors}", String.join(", ", availableColors)));
+            List<String> codes = availableColors.stream().map(c -> c.replace("&", "")).toList();
+            lang.send(player, "color.invalid", "colors", String.join(", ", codes));
             return;
         }
 
-        // Ustaw kolor
         clan.setTagColor(colorCode);
-        clanManager.saveData();
-
-        player.sendMessage(plugin.getPrefix() +
-                plugin.getMessage("color.changed")
-                        .replace("{color}", colorCode.replace("&", "§"))
-                        .replace("{clan}", clan.getName()));
+        clanManager.saveSoon();
+        lang.send(player, "color.tag-changed", "tag", clanManager.getClanTag(clan));
     }
 
     private void handlePvP(Player player, String[] args) {
-        if (!clanManager.hasPlayerClan(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("membership.not-in-clan"));
+        Clan clan = requireLeader(player);
+        if (clan == null) {
             return;
         }
-
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (!clan.isLeader(player.getUniqueId())) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("membership.not-leader"));
-            return;
-        }
-
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan pvp <on/off>");
+            lang.send(player, "pvp.status", "status",
+                    lang.get(clan.isPvpEnabled() ? "pvp.status-enabled" : "pvp.status-disabled"));
+            lang.send(player, "usage.pvp");
             return;
         }
 
         boolean enable;
-        String arg = args[1].toLowerCase();
-
-        if (arg.equals("on") || arg.equals("true") || arg.equals("tak") || arg.equals("włącz")) {
-            enable = true;
-        } else if (arg.equals("off") || arg.equals("false") || arg.equals("nie") || arg.equals("wyłącz")) {
-            enable = false;
-        } else {
-            player.sendMessage(plugin.getPrefix() + "§cUżycie: /klan pvp <on/off>");
-            return;
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "on", "true", "tak", "włącz", "wlacz" -> enable = true;
+            case "off", "false", "nie", "wyłącz", "wylacz" -> enable = false;
+            default -> {
+                lang.send(player, "usage.pvp");
+                return;
+            }
         }
 
         clan.setPvpEnabled(enable);
-        clanManager.saveData();
-
-        if (enable) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("pvp.enabled"));
-        } else {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("pvp.disabled"));
-        }
-
-        // Powiadom wszystkich członków klanu
-        for (Player member : Bukkit.getOnlinePlayers()) {
-            if (clan.isMember(member.getUniqueId()) && !member.equals(player)) {
-                if (enable) {
-                    member.sendMessage(plugin.getPrefix() + plugin.getMessage("pvp.enabled"));
-                } else {
-                    member.sendMessage(plugin.getPrefix() + plugin.getMessage("pvp.disabled"));
-                }
-            }
-        }
+        clanManager.saveSoon();
+        broadcastClan(clan, enable ? "pvp.enabled" : "pvp.disabled");
     }
 
-    private void handleRanking(Player player) {
-        int topClans = plugin.getConfig().getInt("ranking.top-clans", 10);
+    // ===== Pomoc =====
 
-        // Pobierz wszystkie klany i posortuj po zabójstwach
-        List<Clan> sortedClans = new ArrayList<>(clanManager.getAllClans());
-        sortedClans.sort((c1, c2) -> Integer.compare(c2.getKills(), c1.getKills()));
-
-        // Ogranicz do top N
-        if (sortedClans.size() > topClans) {
-            sortedClans = sortedClans.subList(0, topClans);
-        }
-
-        if (sortedClans.isEmpty()) {
-            player.sendMessage(plugin.getPrefix() + plugin.getMessage("ranking.no-clans"));
-            return;
-        }
-
-        player.sendMessage(plugin.getMessage("ranking.header"));
-
-        int position = 1;
-        for (Clan clan : sortedClans) {
-            player.sendMessage(plugin.getMessage("ranking.format")
-                    .replace("{position}", String.valueOf(position))
-                    .replace("{clan}", clan.getName())
-                    .replace("{kills}", String.valueOf(clan.getKills())));
-            position++;
-        }
-
-        player.sendMessage(plugin.getMessage("ranking.footer"));
-    }
-
-    private void showHelp(Player player) {
-        player.sendMessage(plugin.getPrefix() + plugin.getMessage("help.header"));
-
-        String format = plugin.getMessage("help.format");
-
-        // Lista wszystkich komend z opisami z lang file
-        String[][] commands = {
-                {"klan stworz <nazwa>", plugin.getMessage("help.commands.create")},
-                {"klan zapros <gracz>", plugin.getMessage("help.commands.invite")},
-                {"klan akceptuj", plugin.getMessage("help.commands.accept")},
-                {"klan opusc", plugin.getMessage("help.commands.leave")},
-                {"klan rozwiaz", plugin.getMessage("help.commands.disband")},
-                {"klan lista", plugin.getMessage("help.commands.list")},
-                {"klan info [klan]", plugin.getMessage("help.commands.info")},
-                {"klan zastepca <gracz>", plugin.getMessage("help.commands.promote")},
-                {"klan degraduj <gracz>", plugin.getMessage("help.commands.demote")},
-                {"klan wyrzuc <gracz>", plugin.getMessage("help.commands.kick")},
-                {"klan chat <wiadomość>", plugin.getMessage("help.commands.chat")},
-                {"klan cc", plugin.getMessage("help.commands.cc")},
-                {"klan kolor [kolor]", plugin.getMessage("help.commands.color")},
-                {"klan pvp <on/off>", plugin.getMessage("help.commands.pvp")},
-                {"klan ranking", plugin.getMessage("help.commands.ranking")}
-        };
-
-        for (String[] cmd : commands) {
-            player.sendMessage(format
-                    .replace("{command}", cmd[0])
-                    .replace("{description}", cmd[1]));
+    private void showHelp(CommandSender sender) {
+        lang.sendList(sender, "help.player");
+        if (sender.hasPermission("simpleclan.admin")) {
+            lang.sendRaw(sender, "help.admin-hint");
         }
     }
 }

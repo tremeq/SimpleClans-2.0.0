@@ -1,0 +1,285 @@
+[CENTER][SIZE=6][B][COLOR=#FFD700]SimpleClan[/COLOR][/B][/SIZE]
+[SIZE=4]Advanced clan system with chat, PvP toggle, ranking and many more features![/SIZE]
+
+[IMG]https://i.imgur.com/yourbanner.png[/IMG]
+
+[SIZE=5][B]📋 Information[/B][/SIZE]
+[B]Version:[/B] 2.0.0
+[B]Minecraft:[/B] 1.21+
+[B]Requirements:[/B] Java 21+, Spigot/Paper
+[B]Soft-depend:[/B] PlaceholderAPI
+[B]Languages:[/B] 🇵🇱 Polish, 🇬🇧 English
+[/CENTER]
+
+[SIZE=5][B]🌍 Multi-Language Support[/B][/SIZE]
+
+[B]SimpleClan is fully translated and supports:[/B]
+[LIST]
+[*] 🇵🇱 [B]Polish (Polski)[/B] - Complete translation, default language
+[*] 🇬🇧 [B]English[/B] - Full English support
+[/LIST]
+
+[COLOR=#4CAF50][B]All messages, commands, and descriptions are available in both languages![/B][/COLOR]
+Switch language in [B]config.yml[/B] - Every text is fully customizable in language files.
+
+[SIZE=5][B]✨ Features[/B][/SIZE]
+
+[B][COLOR=#4CAF50]🏰 Clan System[/COLOR][/B]
+[LIST]
+[*] Create and manage clans
+[*] Invitation system for new members
+[*] Hierarchy: Leader → Deputy (max 2) → Member
+[*] Configurable member limit (default: 10)
+[*] Configurable clan name length (3-16 characters)
+[*] Clan disbanding by leader
+[/LIST]
+
+[B][COLOR=#2196F3]💬 Clan Chat[/COLOR][/B]
+[LIST]
+[*] Dedicated chat for clan members ([B]/clan chat[/B])
+[*] Auto clan chat toggle ([B]/clan cc[/B])
+[*] Different colors for roles (Leader, Deputy, Member)
+[*] Fully configurable message format
+[*] Private communication between clan members
+[/LIST]
+
+[B][COLOR=#F44336]⚔️ PvP System[/COLOR][/B]
+[LIST]
+[*] Enable/disable friendly fire in clan
+[*] Protection against clan member attacks (when disabled)
+[*] Only leader can change PvP settings
+[*] Member notification on status change
+[*] Per-clan PvP configuration
+[/LIST]
+
+[B][COLOR=#FF9800]🎨 Customization[/COLOR][/B]
+[LIST]
+[*] 10 available clan tag colors
+[*] Format: [COLOR=#FFD700][ClanName][/COLOR]
+[*] Color preview before selection
+[*] Only leader can change color
+[*] Fully customizable tag format
+[/LIST]
+
+[B][COLOR=#9C27B0]📊 Ranking & Statistics[/COLOR][/B]
+[LIST]
+[*] Clan ranking by kills
+[*] Kill tracking for each clan
+[*] Configurable kill broadcast on chat
+[*] Top 10 clans display (configurable)
+[*] Real-time statistics updates
+[/LIST]
+
+[B][COLOR=#00BCD4]👥 Member Management[/COLOR][/B]
+[LIST]
+[*] Promote/demote deputies
+[*] Kick members (even offline players)
+[*] Member list with roles
+[*] Detailed clan information
+[*] Clan creation date tracking
+[/LIST]
+
+[SIZE=5][B]📝 Commands[/B][/SIZE]
+
+[B]All commands support both Polish and English aliases![/B]
+
+[B]English Commands:[/B]
+[code]
+/clan create <name>          - Create a new clan
+/clan invite <player>        - Invite player to clan
+/clan accept                 - Accept invitation
+/clan leave                  - Leave clan
+/clan disband                - Disband clan (leader only)
+/clan list                   - List clan members
+/clan info [clan]            - Show clan information
+/clan mod <player>           - Promote to deputy (leader only)
+/clan demote <player>        - Demote deputy (leader only)
+/clan kick <player>          - Kick member
+/clan chat <message>         - Send message to clan chat
+/clan cc                     - Toggle auto clan chat
+/clan color [color]          - Change tag color (leader only)
+/clan pvp <on/off>           - Toggle clan PvP (leader only)
+/clan top                    - Show clan ranking
+/clan help                   - Show help
+[/code]
+
+[B]Polish Commands:[/B]
+[code]
+/klan stworz <nazwa>         - Stwórz nowy klan
+/klan zapros <gracz>         - Zaproś gracza do klanu
+/klan akceptuj               - Akceptuj zaproszenie
+/klan opusc                  - Opuść klan
+/klan rozwiaz                - Rozwiąż klan (tylko lider)
+/klan lista                  - Lista członków klanu
+/klan info [klan]            - Informacje o klanie
+/klan zastepca <gracz>       - Mianuj zastępcę (tylko lider)
+/klan degraduj <gracz>       - Degraduj zastępcę (tylko lider)
+/klan wyrzuc <gracz>         - Wyrzuć członka
+/klan chat <wiadomość>       - Wyślij wiadomość na czat klanowy
+/klan cc                     - Przełącz auto-czat klanowy
+/klan kolor [kolor]          - Zmień kolor tagu (tylko lider)
+/klan pvp <on/off>           - Włącz/wyłącz PvP w klanie (tylko lider)
+/klan ranking                - Pokaż ranking klanów
+/klan pomoc                  - Pokaż pomoc
+[/code]
+
+[B]Command Aliases:[/B] /clan, /klan, /klany, /clans
+
+[SIZE=5][B]🔌 PlaceholderAPI[/B][/SIZE]
+
+[B]15 available placeholders:[/B]
+[code]
+%simpleclan_tag%             - Clan tag with color (e.g. [Clan])
+%simpleclan_name%            - Clan name
+%simpleclan_leader%          - Leader's nickname
+%simpleclan_members%         - Number of members
+%simpleclan_max_members%     - Maximum number of members
+%simpleclan_is_leader%       - Is player leader (true/false)
+%simpleclan_is_moderator%    - Is player deputy (true/false)
+%simpleclan_is_leader_or_mod% - Is player leader or deputy
+%simpleclan_moderators_count% - Number of deputies
+%simpleclan_has_clan%        - Does player have clan (true/false)
+%simpleclan_created%         - Clan creation date
+%simpleclan_tag_color%       - Tag color code
+%simpleclan_pvp_enabled%     - PvP status (true/false)
+%simpleclan_kills%           - Clan kill count
+%simpleclan_clan_chat%       - Auto clan chat status
+[/code]
+
+[SIZE=5][B]🔐 Permissions[/B][/SIZE]
+
+[code]
+simpleclan.create            - Create clans (default: true)
+simpleclan.invite            - Invite to clan (default: true)
+simpleclan.chat              - Use clan chat (default: true)
+simpleclan.admin             - Clan administration (default: op)
+[/code]
+
+[SIZE=5][B]⚙️ Configuration[/B][/SIZE]
+
+[B]Everything is configurable:[/B]
+[LIST]
+[*] [B]Language selection[/B] - Switch between Polish and English
+[*] Maximum member count (default: 10)
+[*] Maximum deputy count (default: 2)
+[*] Clan name length (3-16 characters)
+[*] Clan tag format
+[*] Available colors (10 colors)
+[*] Clan chat format
+[*] Chat roles (Leader, Deputy)
+[*] Default PvP status
+[*] Ranking display count
+[*] Kill broadcast
+[*] All messages and texts
+[/LIST]
+
+[B]config.yml example:[/B]
+[code]
+# Plugin language (pl, en)
+language: "en"
+
+clan:
+  max-members: 10
+  max-moderators: 2
+  tag-format: "{color}[{clan}]&r"
+  available-colors:
+    - "&6" # Gold (default)
+    - "&c" # Red
+    - "&a" # Green
+    # ... and 7 more colors
+
+chat:
+  format: "&8[&6Clan&8] &r{role}&e{player}&7: &f{message}"
+  leader-role: "&6[Leader] "
+  moderator-role: "&a[Deputy] "
+
+ranking:
+  top-clans: 10
+  broadcast-kills: true
+[/code]
+
+[SIZE=5][B]📥 Installation[/B][/SIZE]
+
+[LIST=1]
+[*] Download .jar file
+[*] Place in [B]plugins/[/B] folder
+[*] (Optional) Install PlaceholderAPI for placeholder support
+[*] Start/restart server
+[*] Configure plugin in [B]plugins/SimpleClan/config.yml[/B]
+[*] Set your preferred language (pl or en)
+[*] Customize messages in [B]plugins/SimpleClan/lang/[/B] folder
+[/LIST]
+
+[SIZE=5][B]⚠️ Requirements[/B][/SIZE]
+
+[LIST]
+[*] [B]Minecraft:[/B] 1.21 or newer
+[*] [B]Java:[/B] 21 or newer
+[*] [B]Server:[/B] Spigot/Paper
+[*] [B]PlaceholderAPI:[/B] Optional (for placeholders)
+[/LIST]
+
+[SIZE=5][B]💡 Usage Examples[/B][/SIZE]
+
+[B]Creating and Managing Clan:[/B]
+[code]
+/clan create Warriors          → Create clan "Warriors"
+/clan invite Steve             → Invite Steve to your clan
+/clan mod Steve                → Promote Steve to deputy
+/clan color &c                 → Change tag color to red
+/clan pvp off                  → Disable friendly fire
+[/code]
+
+[B]Communication:[/B]
+[code]
+/clan chat Hello everyone!     → Send message to clan chat
+/clan cc                       → Toggle auto clan chat mode
+[/code]
+
+[B]Statistics:[/B]
+[code]
+/clan info                     → Show your clan info
+/clan info Warriors            → Show Warriors clan info
+/clan top                      → Show top 10 clans by kills
+[/code]
+
+[SIZE=5][B]🎯 Perfect For[/B][/SIZE]
+
+[LIST]
+[*] 🇵🇱 [B]Polish servers[/B] - Native Polish language support
+[*] 🌍 [B]International servers[/B] - Full English translation
+[*] ⚔️ PvP servers with team mechanics
+[*] 🏰 Survival servers with community features
+[*] 💬 Servers needing organized team communication
+[*] 📊 Competitive servers with ranking systems
+[/LIST]
+
+[SIZE=5][B]🐛 Bug Reports & Support[/B][/SIZE]
+
+Found a bug? Need help? Report it in the discussion section!
+
+[SIZE=5][B]📜 Changelog 2.0.0[/B][/SIZE]
+
+[LIST]
+[*] ✨ Added clan chat system with toggle
+[*] ✨ Added PvP toggle between clan members
+[*] ✨ Added tag color system (10 colors)
+[*] ✨ Added clan ranking by kills
+[*] ✨ Added kill statistics tracking
+[*] ✨ Extended PlaceholderAPI support (15 placeholders)
+[*] ✨ Added deputy demotion feature
+[*] ✨ Added offline player kick support
+[*] ✨ Added clan creation date tracking
+[*] 🌍 Full multi-language system (Polish & English)
+[*] 🔧 Updated to Minecraft 1.21+
+[*] 🔧 Improved permission system
+[*] 🔧 Enhanced configuration options
+[/LIST]
+
+[CENTER]
+[SIZE=4][B]Author: TremeQ[/B][/SIZE]
+[SIZE=3]SimpleClan v2.0.0[/SIZE]
+[SIZE=2]🇵🇱 Fully translated for Polish community | 🇬🇧 Complete English support[/SIZE]
+
+[B]If you enjoy this plugin, please leave a review! ⭐[/B]
+[/CENTER]

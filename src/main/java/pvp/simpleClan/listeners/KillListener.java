@@ -9,55 +9,66 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import pvp.simpleClan.SimpleClan;
 import pvp.simpleClan.data.Clan;
 import pvp.simpleClan.managers.ClanManager;
-
-import java.util.HashMap;
-import java.util.Map;
+import pvp.simpleClan.managers.StatsManager;
 
 /**
- * Obsługuje zabójstwa i tracking statystyk
+ * Zlicza zabójstwa i śmierci graczy oraz klanów
  */
 public class KillListener implements Listener {
 
     private final SimpleClan plugin;
-    private final ClanManager clanManager;
 
     public KillListener(SimpleClan plugin) {
         this.plugin = plugin;
-        this.clanManager = plugin.getClanManager();
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
         Player killer = victim.getKiller();
 
-        // Sprawdź czy zabójca to gracz
-        if (killer == null) {
+        // Liczymy tylko zabójstwa przez innego gracza
+        if (killer == null || killer.equals(victim)) {
             return;
         }
 
-        // Sprawdź czy zabójca jest w klanie
+        ClanManager clanManager = plugin.getClanManager();
+        StatsManager statsManager = plugin.getStatsManager();
         Clan killerClan = clanManager.getPlayerClan(killer.getUniqueId());
-        if (killerClan == null) {
+        Clan victimClan = clanManager.getPlayerClan(victim.getUniqueId());
+
+        // Zabójstwa w obrębie klanu lub sojuszu nie wpływają na statystyki (brak nabijania rankingu)
+        if (killerClan != null && victimClan != null
+                && (killerClan.equals(victimClan) || clanManager.areAllies(killerClan, victimClan))) {
             return;
         }
 
-        // Dodaj zabójstwo do klanu
-        killerClan.addKill();
-        clanManager.saveData();
+        // To samo zabójstwo liczy się raz na kill-cooldown-seconds (ochrona przed farmieniem)
+        if (!statsManager.tryRegisterKill(killer.getUniqueId(), victim.getUniqueId())) {
+            return;
+        }
 
-        // Sprawdź czy broadcastować zabójstwa
-        boolean broadcastKills = plugin.getConfig().getBoolean("ranking.broadcast-kills", true);
-        if (broadcastKills) {
-            Map<String, String> replacements = new HashMap<>();
-            replacements.put("{killer}", killer.getName());
-            replacements.put("{clan}", killerClan.getName());
-            replacements.put("{victim}", victim.getName());
+        statsManager.addKill(killer);
+        statsManager.addDeath(victim);
 
-            String message = plugin.getPrefix() +
-                    plugin.getLangManager().getMessage("kill.clan-kill", replacements);
+        if (killerClan != null) {
+            killerClan.addKill();
+        }
+        if (victimClan != null) {
+            victimClan.addDeath();
+        }
+        if (killerClan != null || victimClan != null) {
+            clanManager.markDirty();
+        }
 
-            Bukkit.broadcastMessage(message);
+        if (killerClan != null && plugin.getConfig().getBoolean("ranking.broadcast-kills", false)) {
+            String message = plugin.getLangManager().get("kill.clan-kill",
+                    "killer", killer.getName(),
+                    "clan", killerClan.getName(),
+                    "victim", victim.getName());
+            if (!message.isEmpty()) {
+                Bukkit.broadcastMessage(plugin.getLangManager().getPrefix() + message);
+            }
         }
     }
 }

@@ -1,61 +1,113 @@
 package pvp.simpleClan.managers;
 
-import java.util.HashSet;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import pvp.simpleClan.SimpleClan;
+import pvp.simpleClan.data.Clan;
+
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Zarządza trybem czatu klanowego dla graczy
+ * Zarządza trybami czatu (klanowy / sojuszniczy) i wysyła wiadomości na te czaty.
+ * Metody wysyłające mogą być wywoływane z wątku asynchronicznego (AsyncPlayerChatEvent).
  */
 public class ChatManager {
 
-    // Gracze którzy mają włączony tryb czatu klanowego
-    private final Set<UUID> clanChatMode;
-
-    public ChatManager() {
-        this.clanChatMode = ConcurrentHashMap.newKeySet();
+    public enum ChatMode {
+        PUBLIC, CLAN, ALLY
     }
 
-    /**
-     * Sprawdza czy gracz ma włączony tryb czatu klanowego
-     */
+    private final SimpleClan plugin;
+    private final Map<UUID, ChatMode> modes = new ConcurrentHashMap<>();
+
+    public ChatManager(SimpleClan plugin) {
+        this.plugin = plugin;
+    }
+
+    public ChatMode getMode(UUID player) {
+        return modes.getOrDefault(player, ChatMode.PUBLIC);
+    }
+
     public boolean isClanChatEnabled(UUID player) {
-        return clanChatMode.contains(player);
+        return getMode(player) == ChatMode.CLAN;
     }
 
     /**
-     * Włącza tryb czatu klanowego dla gracza
+     * Przełącza podany tryb: jeśli jest już aktywny, wraca do czatu publicznego
+     *
+     * @return nowy tryb gracza
      */
-    public void enableClanChat(UUID player) {
-        clanChatMode.add(player);
-    }
-
-    /**
-     * Wyłącza tryb czatu klanowego dla gracza
-     */
-    public void disableClanChat(UUID player) {
-        clanChatMode.remove(player);
-    }
-
-    /**
-     * Przełącza tryb czatu klanowego dla gracza
-     * @return true jeśli włączony, false jeśli wyłączony
-     */
-    public boolean toggleClanChat(UUID player) {
-        if (clanChatMode.contains(player)) {
-            clanChatMode.remove(player);
-            return false;
-        } else {
-            clanChatMode.add(player);
-            return true;
+    public ChatMode toggle(UUID player, ChatMode mode) {
+        if (getMode(player) == mode) {
+            modes.remove(player);
+            return ChatMode.PUBLIC;
         }
+        modes.put(player, mode);
+        return mode;
     }
 
     /**
-     * Usuwa gracza z trybu czatu (np. gdy opuszcza klan)
+     * Przywraca czat publiczny (np. po opuszczeniu klanu)
      */
-    public void removePlayer(UUID player) {
-        clanChatMode.remove(player);
+    public void reset(UUID player) {
+        modes.remove(player);
+    }
+
+    /**
+     * Wysyła wiadomość do wszystkich członków klanu
+     */
+    public void sendClanMessage(Player sender, Clan clan, String message) {
+        String formatted = format("chat.format", sender, clan, message);
+        Set<UUID> recipients = new LinkedHashSet<>(clan.getMembers());
+        deliver(recipients, formatted);
+    }
+
+    /**
+     * Wysyła wiadomość do członków klanu i wszystkich klanów sojuszniczych
+     */
+    public void sendAllyMessage(Player sender, Clan clan, String message) {
+        String formatted = format("chat.ally-format", sender, clan, message);
+        Set<UUID> recipients = new LinkedHashSet<>(clan.getMembers());
+        for (Clan ally : plugin.getClanManager().getAllies(clan)) {
+            recipients.addAll(ally.getMembers());
+        }
+        deliver(recipients, formatted);
+    }
+
+    private String format(String formatPath, Player sender, Clan clan, String message) {
+        LangManager lang = plugin.getLangManager();
+
+        String role = "";
+        if (clan.isLeader(sender.getUniqueId())) {
+            role = lang.get("chat.leader-role");
+        } else if (clan.isModerator(sender.getUniqueId())) {
+            role = lang.get("chat.moderator-role");
+        }
+
+        // Kolory w treści tylko dla graczy z uprawnieniem - w przeciwnym razie "&" zostaje zwykłym znakiem
+        String content = sender.hasPermission("simpleclan.chat.color") ? LangManager.colorize(message) : message;
+
+        // {message} podstawiamy na końcu, żeby treść gracza nie była interpretowana jako placeholder
+        return lang.get(formatPath,
+                "role", role,
+                "player", sender.getName(),
+                "tag", plugin.getClanManager().getClanTag(clan))
+                .replace("{message}", content);
+    }
+
+    private void deliver(Set<UUID> recipients, String formatted) {
+        for (UUID uuid : recipients) {
+            Player member = Bukkit.getPlayer(uuid);
+            if (member != null) {
+                member.sendMessage(formatted);
+            }
+        }
+        if (plugin.getConfig().getBoolean("chat.log-to-console", true)) {
+            Bukkit.getConsoleSender().sendMessage(formatted);
+        }
     }
 }

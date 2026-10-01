@@ -1,16 +1,22 @@
 # Polski plik językowy dla SimpleClan
+# Kolory: &0-&9, &a-&f, formatowanie &l &o &n &m &k &r, kolory HEX: &#RRGGBB
+# Pusta wiadomość ("") oznacza, że komunikat nie będzie wysyłany.
 prefix: "&8[&6SimpleClan&8] &r"
 
 # Podstawowe wiadomości
 no-permission: "&cNie masz uprawnień do tej komendy!"
 player-only: "&cTa komenda może być użyta tylko przez gracza!"
-unknown-command: "&cNieznana komenda! Użyj /klan pomoc"
+unknown-command: "&cNieznana komenda! Użyj &e/klan pomoc"
+
+general:
+  none: "Brak"
+  unknown: "Nieznany"
 
 # Klan - podstawowe
 clan:
   created: "&aKlan &6{clan} &azostał utworzony!"
   already-exists: "&cKlan o tej nazwie już istnieje!"
-  disbanded: "&cKlan został rozwiązany!"
+  disbanded: "&cKlan &6{clan} &czostał rozwiązany!"
   not-found: "&cNie znaleziono klanu!"
   full: "&cKlan jest pełny!"
 
@@ -22,12 +28,13 @@ membership:
   not-leader-or-mod: "&cNie jesteś liderem ani zastępcą klanu!"
   player-not-found: "&cGracz nie został znaleziony!"
   player-already-in-clan: "&cTen gracz już jest w klanie!"
+  not-member: "&cGracz &6{player} &cnie jest członkiem twojego klanu!"
 
 # Zastępcy
 moderator:
   added: "&aGracz &6{player} &azostał mianowany zastępcą klanu!"
   removed: "&cGracz &6{player} &cnie jest już zastępcą klanu!"
-  player-promoted: "&aTy zostałeś mianowany zastępcą klanu &6{clan}&a!"
+  player-promoted: "&aZostałeś mianowany zastępcą klanu &6{clan}&a!"
   player-demoted: "&cNie jesteś już zastępcą klanu!"
   max-moderators: "&cKlan może mieć maksymalnie {max} zastępców!"
   already-moderator: "&cTen gracz już jest zastępcą!"
@@ -39,96 +46,231 @@ kick:
   player-kicked: "&cZostałeś wyrzucony z klanu &6{clan}&c!"
   cannot-kick-leader: "&cNie możesz wyrzucić lidera!"
   cannot-kick-moderator: "&cNie możesz wyrzucić zastępcy! Tylko lider może to zrobić."
-  cannot-kick-yourself: "&cNie możesz wyrzucić samego siebie! Użyj /klan opusc"
+  cannot-kick-yourself: "&cNie możesz wyrzucić samego siebie! Użyj &e/klan opusc"
   cannot-demote-leader: "&cNie możesz zdegradować lidera!"
 
 # Zaproszenia
 invite:
   sent: "&aZaproszenie wysłane do gracza &6{player}&a!"
-  received: "&aOtrzymałeś zaproszenie do klanu &6{clan}&a! Użyj &e/klan akceptuj &aaby je zaakceptować."
+  received: "&aOtrzymałeś zaproszenie do klanu &6{clan}&a! Wpisz &e/klan akceptuj {clan} &aaby dołączyć lub &e/klan odrzuc {clan} &aaby odrzucić. &7(ważne {seconds}s)"
   no-invite: "&cNie masz żadnych zaproszeń!"
+  no-invite-from: "&cNie masz zaproszenia od klanu &6{clan}&c!"
+  multiple: "&eMasz kilka zaproszeń: &6{clans}"
+  already-invited: "&cGracz &6{player} &cma już zaproszenie do twojego klanu!"
   accepted: "&aGracz &6{player} &adołączył do klanu!"
   joined-clan: "&aDołączyłeś do klanu &6{clan}&a!"
+  denied: "&eOdrzuciłeś zaproszenie do klanu &6{clan}&e."
+  denied-notify: "&cGracz &6{player} &codrzucił zaproszenie do klanu."
 
 # Opuszczanie
 leave:
   left-clan: "&eOpuściłeś klan!"
   player-left: "&eGracz &6{player} &eopuścił klan!"
+  leader-cannot-leave: "&cJako lider nie możesz opuścić klanu! Przekaż przywództwo (&e/klan lider <gracz>&c) albo rozwiąż klan (&e/klan rozwiaz&c)."
+
+# Rozwiązywanie klanu
+disband:
+  confirm: "&c&lUWAGA! &cTa operacja usunie klan &6{clan} &cna zawsze. Wpisz &e/klan rozwiaz {confirm} &cw ciągu {seconds}s, aby potwierdzić."
+
+# Przekazanie przywództwa
+leader:
+  confirm: "&eCzy na pewno chcesz przekazać przywództwo graczowi &6{player}&e? Wpisz &6/klan lider {player} {confirm} &ew ciągu {seconds}s."
+  changed: "&aGracz &6{player} &ajest nowym liderem klanu! &7(poprzedni lider: {old})"
+  already-leader: "&cTen gracz już jest liderem klanu!"
+
+# Potwierdzenia
+confirm:
+  nothing-pending: "&cNie masz nic do potwierdzenia albo czas na potwierdzenie minął."
 
 # Lista członków
 members:
-  header: "&6Członkowie klanu {clan}:"
-  format: "&7- &e{player} {status}"
+  header: "&6Członkowie klanu {clan} &7({count}):"
+  format: "&7- {online} &e{player} {status}"
   leader-status: "&6(Lider)"
   moderator-status: "&a(Zastępca)"
   member-status: ""
+  online: "&a●"
+  offline: "&7●"
 
 # Informacje o klanie
 info:
   header: "&6Informacje o klanie {clan}:"
   leader: "&7Lider: &e{leader}"
   moderators: "&7Zastępcy: &e{moderators}"
-  members: "&7Członków: &e{count}/{max}"
+  members: "&7Członków: &e{count}/{max} &7(online: &a{online}&7)"
   created: "&7Utworzony: &e{date}"
-  tag-color: "&7Kolor tagu: {color}{clan}"
-  pvp: "&7PvP: {status}"
-  kills: "&7Zabójstwa: &e{kills}"
+  tag: "&7Tag: {tag}"
+  pvp: "&7PvP w klanie: {status}"
+  stats: "&7Zabójstwa: &e{kills} &7| Śmierci: &e{deaths} &7| KDR: &e{kdr} &7| Ranking: &e#{rank}"
+  allies: "&7Sojusznicy: &d{allies}"
 
 # Błędy nazwy klanu
 name:
   too-short: "&cNazwa klanu musi mieć co najmniej {min} znaków!"
   too-long: "&cNazwa klanu może mieć maksymalnie {max} znaków!"
-  invalid-characters: "&cNazwa klanu zawiera niedozwolone znaki!"
+  invalid-characters: "&cNazwa klanu może zawierać tylko litery (bez polskich znaków), cyfry, _ oraz -!"
 
-# Chat klanowy
+# Czat klanowy i sojuszniczy
+# Placeholdery formatu: {role}, {player}, {tag}, {message}
 chat:
-  toggled-on: "&aTryb czatu klanowego włączony! Wszystko co piszesz trafia tylko do klanu."
-  toggled-off: "&cTryb czatu klanowego wyłączony."
   format: "&8[&6Klan&8] &r{role}&e{player}&7: &f{message}"
-  sent: "&8[&6Klan&8] &r{role}&e{player}&7: &f{message}"
+  ally-format: "&8[&dSojusz&8] &r{tag} {role}&e{player}&7: &f{message}"
+  leader-role: "&6[Lider] "
+  moderator-role: "&a[Zastępca] "
+  toggled-on: "&aTryb czatu klanowego włączony! Wszystko co piszesz trafia tylko do klanu."
+  ally-toggled-on: "&dTryb czatu sojuszniczego włączony! Wszystko co piszesz trafia do klanu i sojuszników."
+  toggled-off: "&cTryb czatu klanowego wyłączony. Piszesz na czacie publicznym."
+  mode-reset: "&cNie jesteś już w klanie - tryb czatu klanowego został wyłączony, a wiadomość nie została wysłana."
 
 # Kolory tagu
 color:
-  changed: "&aKolor tagu zmieniony na: {color}{clan}"
-  invalid: "&cNieprawidłowy kolor! Dostępne: {colors}"
-  available: "&aDostępne kolory: &f{colors}"
+  tag-changed: "&aKolor tagu zmieniony! Nowy tag: {tag}"
+  invalid: "&cNieprawidłowy kolor! Dostępne: &f{colors}"
+  available: "&aDostępne kolory: {colors}"
 
 # PvP
 pvp:
   enabled: "&aPvP w klanie zostało włączone!"
   disabled: "&cPvP w klanie zostało wyłączone!"
+  status: "&7Aktualnie PvP w klanie: {status}"
   status-enabled: "&aWłączone"
   status-disabled: "&cWyłączone"
   blocked: "&cNie możesz zaatakować członka swojego klanu!"
+  blocked-ally: "&cNie możesz zaatakować sojusznika!"
 
 # Ranking
 ranking:
-  header: "&6&l=== TOP 10 Klanów (Zabójstwa) ==="
-  format: "&e#{position} &6{clan} &7- &e{kills} zabójstw"
+  title: "&6&l=== TOP {count} klanów ({type}) ==="
+  format: "&e#{position} {tag} &7- &e{kills} &7zab. | &e{deaths} &7śm. | KDR &e{kdr} &7| &e{members} &7czł."
   footer: "&6&l================================"
   no-clans: "&cBrak klanów do wyświetlenia!"
+  types:
+    kills: "zabójstwa"
+    kdr: "KDR"
+    members: "członkowie"
 
-# Kill notifications
+# Statystyki gracza
+stats:
+  header: "&6Statystyki gracza {player}:"
+  kills: "&7Zabójstwa: &e{kills}"
+  deaths: "&7Śmierci: &e{deaths}"
+  kdr: "&7KDR: &e{kdr}"
+  clan: "&7Klan: &e{clan}"
+
+# Powiadomienia o zabójstwach (ranking.broadcast-kills w config.yml)
 kill:
   clan-kill: "&6{killer} &ez klanu &6{clan} &azabił gracza &c{victim}&a!"
 
+# Sojusze
+alliance:
+  disabled: "&cSojusze są wyłączone na tym serwerze."
+  self: "&cNie możesz zawrzeć sojuszu z własnym klanem!"
+  already-allied: "&cTwój klan jest już w sojuszu z klanem &6{clan}&c!"
+  already-requested: "&cWysłałeś już prośbę o sojusz do klanu &6{clan}&c. Poczekaj na odpowiedź."
+  limit-own: "&cTwój klan osiągnął limit sojuszy ({max})!"
+  limit-other: "&cKlan &6{clan} &costiągnął limit sojuszy ({max})!"
+  request-sent: "&aWysłano prośbę o sojusz do klanu &6{clan}&a!"
+  request-received: "&dKlan &6{clan} &dproponuje sojusz! Lider może wpisać &e/klan sojusz akceptuj {clan} &dlub &e/klan sojusz odrzuc {clan}&d. &7(ważne {seconds}s)"
+  formed: "&d&lSOJUSZ! &dTwój klan zawarł sojusz z klanem &6{clan}&d!"
+  no-request: "&cNie masz prośby o sojusz od klanu &6{clan}&c!"
+  no-requests: "&cTwój klan nie ma żadnych próśb o sojusz."
+  incoming: "&eProśby o sojusz od: &6{clans}"
+  request-denied: "&eOdrzuciłeś prośbę o sojusz od klanu &6{clan}&e."
+  request-denied-notify: "&cKlan &6{clan} &codrzucił prośbę o sojusz."
+  request-cancelled: "&eAnulowałeś prośbę o sojusz do klanu &6{clan}&e."
+  request-cancelled-notify: "&eKlan &6{clan} &ewycofał prośbę o sojusz."
+  no-outgoing-request: "&cNie wysłałeś prośby o sojusz do klanu &6{clan}&c!"
+  not-allied: "&cTwój klan nie jest w sojuszu z klanem &6{clan}&c!"
+  broken: "&cSojusz z klanem &6{clan} &czostał zerwany!"
+  ally-disbanded: "&cSojuszniczy klan &6{clan} &czostał rozwiązany - sojusz wygasł."
+  no-allies: "&cTwój klan nie ma żadnych sojuszników!"
+  list-header: "&dSojusznicy klanu &7({count}/{max}):"
+  list-none: "&7- brak sojuszników"
+  list-entry: "&7- {tag} &7lider: &e{leader} &7członków: &e{members} &7(online: &a{online}&7)"
+  list-incoming: "&eOczekujące prośby od: &6{clans}"
+  list-outgoing: "&eWysłane prośby do: &6{clans}"
+
+# Komendy administratora
+admin:
+  reloaded: "&aPrzeładowano konfigurację i plik językowy &7({lang})&a!"
+  disbanded: "&aKlan &6{clan} &azostał rozwiązany przez administratora."
+  disband-confirm: "&c&lUWAGA! &cKlan &6{clan} &czostanie usunięty na zawsze. Wpisz &e/klan admin rozwiaz {clan} {confirm} &cw ciągu {seconds}s."
+  player-not-in-clan: "&cGracz &6{player} &cnie jest w żadnym klanie!"
+  kicked: "&aGracz &6{player} &azostał usunięty z klanu &6{clan}&a."
+  added: "&aGracz &6{player} &azostał dodany do klanu &6{clan}&a."
+  leader-set: "&aGracz &6{player} &ajest teraz liderem klanu &6{clan}&a."
+  stats-reset-clan: "&aZresetowano statystyki klanu &6{clan}&a."
+  stats-reset-player: "&aZresetowano statystyki gracza &6{player}&a."
+
+# Użycie komend
+usage:
+  create: "&cUżycie: /klan stworz <nazwa>"
+  invite: "&cUżycie: /klan zapros <gracz>"
+  accept: "&cUżycie: /klan akceptuj <klan>"
+  deny: "&cUżycie: /klan odrzuc <klan>"
+  promote: "&cUżycie: /klan zastepca <gracz>"
+  demote: "&cUżycie: /klan degraduj <gracz>"
+  kick: "&cUżycie: /klan wyrzuc <gracz>"
+  leader: "&cUżycie: /klan lider <gracz>"
+  chat: "&cUżycie: /klan chat <wiadomość>"
+  pvp: "&cUżycie: /klan pvp <on/off>"
+  info: "&cUżycie: /klan info <klan>"
+  ranking: "&cUżycie: /klan ranking [zabojstwa/kdr/czlonkowie]"
+  stats: "&cUżycie: /klan staty <gracz>"
+  ally-invite: "&cUżycie: /klan sojusz zapros <klan>"
+  ally-accept: "&cUżycie: /klan sojusz akceptuj <klan>"
+  ally-deny: "&cUżycie: /klan sojusz odrzuc <klan>"
+  ally-cancel: "&cUżycie: /klan sojusz anuluj <klan>"
+  ally-break: "&cUżycie: /klan sojusz zerwij <klan>"
+  admin-disband: "&cUżycie: /klan admin rozwiaz <klan>"
+  admin-kick: "&cUżycie: /klan admin wyrzuc <gracz>"
+  admin-add: "&cUżycie: /klan admin dodaj <klan> <gracz>"
+  admin-leader: "&cUżycie: /klan admin lider <klan> <gracz>"
+  admin-resetstats: "&cUżycie: /klan admin resetstaty <klan/gracz> <nazwa>"
+
+# Dodatkowe błędy
+errors:
+  cannot-promote-leader: "&cNie możesz mianować lidera zastępcą!"
+
 # Pomoc
 help:
-  header: "&6Dostępne komendy SimpleClan:"
-  format: "&e/{command} &7- {description}"
-  commands:
-    create: "Tworzy nowy klan"
-    invite: "Zaprasza gracza do klanu"
-    accept: "Akceptuje zaproszenie do klanu"
-    leave: "Opuszcza klan"
-    disband: "Rozwiązuje klan (tylko lider)"
-    list: "Wyświetla listę członków klanu"
-    info: "Wyświetla informacje o klanie"
-    promote: "Mianuje zastępcę klanu (tylko lider)"
-    demote: "Degraduje zastępcę klanu (tylko lider)"
-    kick: "Wyrzuca gracza z klanu (lider/zastępca)"
-    chat: "Wysyła wiadomość na czat klanowy"
-    cc: "Przełącza tryb czatu klanowego"
-    color: "Zmienia kolor tagu klanu"
-    pvp: "Włącza/wyłącza PvP w klanie (lider)"
-    ranking: "Wyświetla ranking klanów"
+  player:
+    - "&6&l=== SimpleClan - komendy ==="
+    - "&e/klan stworz <nazwa> &7- Tworzy nowy klan"
+    - "&e/klan zapros <gracz> &7- Zaprasza gracza do klanu (lider/zastępca)"
+    - "&e/klan akceptuj [klan] &7- Akceptuje zaproszenie do klanu"
+    - "&e/klan odrzuc [klan] &7- Odrzuca zaproszenie do klanu"
+    - "&e/klan opusc &7- Opuszcza klan"
+    - "&e/klan rozwiaz &7- Rozwiązuje klan (lider, wymaga potwierdzenia)"
+    - "&e/klan lider <gracz> &7- Przekazuje przywództwo (lider)"
+    - "&e/klan lista &7- Wyświetla członków klanu"
+    - "&e/klan info [klan] &7- Wyświetla informacje o klanie"
+    - "&e/klan zastepca <gracz> &7- Mianuje zastępcę (lider)"
+    - "&e/klan degraduj <gracz> &7- Degraduje zastępcę (lider)"
+    - "&e/klan wyrzuc <gracz> &7- Wyrzuca gracza z klanu (lider/zastępca)"
+    - "&e/klan chat <wiadomość> &7- Wysyła wiadomość na czat klanowy"
+    - "&e/klan cc &7- Przełącza tryb czatu klanowego"
+    - "&e/klan sc [wiadomość] &7- Czat sojuszniczy (bez wiadomości: przełącza tryb)"
+    - "&e/klan kolor [kolor] &7- Zmienia kolor tagu klanu (lider)"
+    - "&e/klan pvp <on/off> &7- Włącza/wyłącza PvP w klanie (lider)"
+    - "&e/klan sojusz &7- Zarządzanie sojuszami"
+    - "&e/klan ranking [zabojstwa/kdr/czlonkowie] &7- Ranking klanów"
+    - "&e/klan staty [gracz] &7- Statystyki gracza"
+  alliance:
+    - "&d&l=== Sojusze ==="
+    - "&e/klan sojusz zapros <klan> &7- Wysyła prośbę o sojusz (lider)"
+    - "&e/klan sojusz akceptuj [klan] &7- Akceptuje prośbę o sojusz (lider)"
+    - "&e/klan sojusz odrzuc [klan] &7- Odrzuca prośbę o sojusz (lider)"
+    - "&e/klan sojusz anuluj <klan> &7- Wycofuje wysłaną prośbę (lider)"
+    - "&e/klan sojusz zerwij <klan> &7- Zrywa sojusz (lider)"
+    - "&e/klan sojusz lista &7- Lista sojuszników i próśb"
+    - "&e/klan sc [wiadomość] &7- Czat z sojusznikami"
+  admin:
+    - "&c&l=== SimpleClan - administracja ==="
+    - "&e/klan admin przeladuj &7- Przeładowuje config i język"
+    - "&e/klan admin rozwiaz <klan> &7- Usuwa klan (wymaga potwierdzenia)"
+    - "&e/klan admin wyrzuc <gracz> &7- Usuwa gracza z klanu"
+    - "&e/klan admin dodaj <klan> <gracz> &7- Dodaje gracza do klanu"
+    - "&e/klan admin lider <klan> <gracz> &7- Ustawia lidera klanu"
+    - "&e/klan admin resetstaty <klan/gracz> <nazwa> &7- Resetuje statystyki"
+  admin-hint: "&cAdministracja: &e/klan admin"

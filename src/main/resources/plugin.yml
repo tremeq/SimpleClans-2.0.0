@@ -1,16 +1,16 @@
 name: SimpleClan
-version: 2.0.0
+version: ${project.version}
 main: pvp.simpleClan.SimpleClan
 api-version: 1.21
 author: TremeQ
-description: Rozbudowany plugin na klany z czatem, PvP toggle, rankingiem i wieloma innymi funkcjami
+description: Rozbudowany plugin na klany z czatem, sojuszami, PvP toggle, statystykami i rankingiem
 softdepend: [PlaceholderAPI]
 
 commands:
   klan:
     description: Główna komenda klanów
-    usage: /klan <stworz|zapros|akceptuj|opusc|rozwiaz|lista|info|zastepca|degraduj|wyrzuc|chat|cc|kolor|pvp|ranking|pomoc>
-    aliases: [clan, klany]
+    usage: /klan pomoc
+    aliases: [clan, klany, clans]
 
 permissions:
   simpleclan.create:
@@ -20,8 +20,14 @@ permissions:
     description: Pozwala zapraszać do klanu
     default: true
   simpleclan.chat:
-    description: Pozwala używać czatu klanowego
+    description: Pozwala używać czatu klanowego i sojuszniczego
+    default: true
+  simpleclan.chat.color:
+    description: Pozwala używać kolorów (&) w wiadomościach na czacie klanowym
+    default: op
+  simpleclan.alliance:
+    description: Pozwala zarządzać sojuszami klanu
     default: true
   simpleclan.admin:
-    description: Pozwala na administracyjne zarządzanie klanami
+    description: Pozwala na administracyjne zarządzanie klanami (/klan admin)
     default: op

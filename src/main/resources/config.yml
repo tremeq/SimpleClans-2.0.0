@@ -1,6 +1,7 @@
-# Konfiguracja SimpleClan
+# Konfiguracja SimpleClan / SimpleClan configuration
 
-# Język pluginu (pl, en)
+# Język pluginu: pl, en (pliki w folderze lang/)
+# Plugin language: pl, en (files in the lang/ folder)
 language: "pl"
 
 # Ustawienia klanów
@@ -9,6 +10,9 @@ clan:
   max-name-length: 16
   min-name-length: 3
   max-moderators: 2
+  # Po ilu sekundach wygasa zaproszenie do klanu
+  invite-expire-seconds: 120
+  # Format tagu klanu ({color} - kolor klanu, {clan} - nazwa)
   tag-format: "{color}[{clan}]&r"
 
   # Dostępne kolory tagów
@@ -24,29 +28,47 @@ clan:
     - "&f" # Biały
     - "&7" # Szary
 
-# Ustawienia chatu klanowego
+# Ustawienia czatu klanowego
+# Formaty wiadomości i nazwy ról znajdują się w plikach językowych (lang/pl.yml, lang/en.yml)
 chat:
-  # Format wiadomości na czacie klanowym
-  # {role} - rola w klanie (lider/zastępca/pusty)
-  # {player} - nick gracza
-  # {message} - treść wiadomości
-  format: "&8[&6Klan&8] &r{role}&e{player}&7: &f{message}"
-
-  # Format roli dla lidera
-  leader-role: "&6[Lider] "
-
-  # Format roli dla zastępcy
-  moderator-role: "&a[Zastępca] "
+  # Czy wiadomości z czatu klanowego i sojuszniczego mają trafiać do konsoli
+  log-to-console: true
 
 # Ustawienia PvP
 pvp:
   # Czy domyślnie PvP w klanie jest włączone dla nowych klanów
   default-enabled: false
+  # Jak często (w sekundach) wyświetlać komunikat o zablokowanym ataku
+  message-cooldown-seconds: 3
+
+# Ustawienia sojuszy
+alliance:
+  enabled: true
+  # Maksymalna liczba sojuszy jednego klanu (-1 = bez limitu)
+  max-allies: 3
+  # Czy sojusznicy mogą się nawzajem atakować
+  friendly-fire: false
+  # Po ilu sekundach wygasa prośba o sojusz
+  request-expire-seconds: 300
+
+# Ustawienia statystyk
+stats:
+  # Ile sekund musi minąć, żeby zabójstwo tego samego gracza przez tego samego zabójcę
+  # znowu się liczyło (ochrona przed nabijaniem). 0 = bez ograniczeń
+  kill-cooldown-seconds: 300
 
 # Ustawienia rankingu
 ranking:
   # Ile klanów wyświetlać w rankingu
   top-clans: 10
 
-  # Czy broadcastować zabójstwa
-  broadcast-kills: true
+  # Czy ogłaszać na czacie zabójstwa graczy z klanów
+  broadcast-kills: false
+
+# Ile sekund ma gracz na potwierdzenie rozwiązania klanu / przekazania przywództwa
+confirmation-timeout-seconds: 30
+
+# Zapis danych
+storage:
+  # Co ile sekund zapisywać statystyki (zmiany w klanach zapisywane są od razu)
+  autosave-interval-seconds: 60

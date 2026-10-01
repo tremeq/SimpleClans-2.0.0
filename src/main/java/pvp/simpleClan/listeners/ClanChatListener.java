@@ -1,87 +1,51 @@
 package pvp.simpleClan.listeners;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import pvp.simpleClan.SimpleClan;
 import pvp.simpleClan.data.Clan;
 import pvp.simpleClan.managers.ChatManager;
-import pvp.simpleClan.managers.ClanManager;
+import pvp.simpleClan.managers.ChatManager.ChatMode;
 
 /**
- * Obsługuje czat klanowy
+ * Przekierowuje wiadomości graczy z włączonym trybem czatu klanowego lub sojuszniczego
  */
 public class ClanChatListener implements Listener {
 
     private final SimpleClan plugin;
-    private final ClanManager clanManager;
-    private final ChatManager chatManager;
 
     public ClanChatListener(SimpleClan plugin) {
         this.plugin = plugin;
-        this.clanManager = plugin.getClanManager();
-        this.chatManager = new ChatManager();
     }
 
-    public ChatManager getChatManager() {
-        return chatManager;
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
+    // ignoreCancelled = true: wiadomość wyciszona przez inny plugin (np. mute) nie trafi na czat klanu
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
+        ChatManager chatManager = plugin.getChatManager();
+        ChatMode mode = chatManager.getMode(player.getUniqueId());
 
-        // Sprawdź czy gracz ma włączony tryb czatu klanowego
-        if (!chatManager.isClanChatEnabled(player.getUniqueId())) {
+        if (mode == ChatMode.PUBLIC) {
             return;
         }
 
-        // Sprawdź czy gracz jest w klanie
-        Clan clan = clanManager.getPlayerClan(player.getUniqueId());
-        if (clan == null) {
-            chatManager.disableClanChat(player.getUniqueId());
-            return;
-        }
-
-        // Anuluj normalny czat
+        // Gracz z trybem czatu klanowego nigdy nie powinien przypadkiem pisać na czacie publicznym
         event.setCancelled(true);
 
-        // Pobierz format i rolę gracza
-        String format = plugin.getConfig().getString("chat.format",
-                "&8[&6Klan&8] &r{role}&e{player}&7: &f{message}");
-
-        String role = "";
-        if (clan.isLeader(player.getUniqueId())) {
-            role = plugin.getConfig().getString("chat.leader-role", "&6[Lider] ");
-        } else if (clan.isModerator(player.getUniqueId())) {
-            role = plugin.getConfig().getString("chat.moderator-role", "&a[Zastępca] ");
+        Clan clan = plugin.getClanManager().getPlayerClan(player.getUniqueId());
+        if (clan == null) {
+            chatManager.reset(player.getUniqueId());
+            plugin.getLangManager().send(player, "chat.mode-reset");
+            return;
         }
 
-        // Sformatuj wiadomość
-        String message = format
-                .replace("{role}", role)
-                .replace("{player}", player.getName())
-                .replace("{message}", event.getMessage())
-                .replace("&", "§");
-
-        // Wyślij do wszystkich członków klanu
-        for (Player member : Bukkit.getOnlinePlayers()) {
-            if (clan.isMember(member.getUniqueId())) {
-                member.sendMessage(message);
-            }
+        if (mode == ChatMode.ALLY && plugin.getClanManager().isAllianceEnabled()) {
+            chatManager.sendAllyMessage(player, clan, event.getMessage());
+        } else {
+            chatManager.sendClanMessage(player, clan, event.getMessage());
         }
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        // Wyczyść tryb czatu klanowego gdy gracz opuszcza serwer
-        chatManager.removePlayer(event.getPlayer().getUniqueId());
-
-        // Wyczyść zaproszenia do klanu gdy gracz opuszcza serwer
-        clanManager.removeInvite(event.getPlayer().getUniqueId());
     }
 }

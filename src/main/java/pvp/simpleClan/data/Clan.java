@@ -3,52 +3,64 @@ package pvp.simpleClan.data;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Model klanu.
+ * Zbiory są thread-safe, bo czytają je również wątki asynchroniczne (czat, PlaceholderAPI).
+ */
 public class Clan {
 
-    private final String name;
-    private UUID leader;
-    private Set<UUID> members;
-    private Set<UUID> moderators;
-    private LocalDateTime created;
-    private boolean pvpEnabled;
-    private String tagColor;
-    private int kills;
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    public Clan(String name, UUID leader) {
+    private final String name;
+    private volatile UUID leader;
+    private final Set<UUID> members = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> moderators = ConcurrentHashMap.newKeySet();
+    private final Set<String> allies = ConcurrentHashMap.newKeySet();
+    private final LocalDateTime created;
+    private volatile boolean pvpEnabled;
+    private volatile String tagColor;
+    private volatile int kills;
+    private volatile int deaths;
+
+    public Clan(String name, UUID leader, boolean pvpEnabled) {
         this.name = name;
         this.leader = leader;
-        this.members = new HashSet<>();
-        this.moderators = new HashSet<>();
         this.members.add(leader);
         this.created = LocalDateTime.now();
-        this.pvpEnabled = false; // Domyślnie PvP wyłączone
+        this.pvpEnabled = pvpEnabled;
         this.tagColor = "&6"; // Domyślnie złoty kolor
-        this.kills = 0;
     }
 
     // Konstruktor do wczytywania z pliku
-    public Clan(String name, UUID leader, Set<UUID> members, Set<UUID> moderators, LocalDateTime created,
-                boolean pvpEnabled, String tagColor, int kills) {
+    private Clan(String name, UUID leader, LocalDateTime created) {
         this.name = name;
         this.leader = leader;
-        this.members = members;
-        this.moderators = moderators != null ? moderators : new HashSet<>();
         this.created = created;
-        this.pvpEnabled = pvpEnabled;
-        this.tagColor = tagColor != null ? tagColor : "&6";
-        this.kills = kills;
     }
 
     public String getName() {
         return name;
     }
 
+    /**
+     * Klucz klanu używany w mapach i w pliku danych (nazwa małymi literami)
+     */
+    public String getKey() {
+        return name.toLowerCase(Locale.ROOT);
+    }
+
     public UUID getLeader() {
         return leader;
     }
 
+    /**
+     * Ustawia lidera. Nowy lider musi być członkiem klanu i przestaje być zastępcą.
+     */
     public void setLeader(UUID leader) {
+        members.add(leader);
+        moderators.remove(leader);
         this.leader = leader;
     }
 
@@ -103,12 +115,36 @@ public class Clan {
         return moderators.size();
     }
 
+    // ===== Sojusze =====
+
+    public Set<String> getAllies() {
+        return new HashSet<>(allies);
+    }
+
+    public boolean isAlly(String clanKey) {
+        return allies.contains(clanKey);
+    }
+
+    public void addAlly(String clanKey) {
+        allies.add(clanKey);
+    }
+
+    public void removeAlly(String clanKey) {
+        allies.remove(clanKey);
+    }
+
+    public int getAllyCount() {
+        return allies.size();
+    }
+
+    // ===== Pozostałe =====
+
     public LocalDateTime getCreated() {
         return created;
     }
 
     public String getFormattedCreatedDate() {
-        return created.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+        return created.format(DATE_FORMAT);
     }
 
     public boolean isPvpEnabled() {
@@ -127,6 +163,8 @@ public class Clan {
         this.tagColor = tagColor;
     }
 
+    // ===== Statystyki (modyfikowane tylko w wątku głównym) =====
+
     public int getKills() {
         return kills;
     }
@@ -135,61 +173,81 @@ public class Clan {
         this.kills++;
     }
 
-    public void setKills(int kills) {
-        this.kills = kills;
+    public int getDeaths() {
+        return deaths;
+    }
+
+    public void addDeath() {
+        this.deaths++;
+    }
+
+    public double getKdr() {
+        return PlayerStats.kdr(kills, deaths);
+    }
+
+    public void resetStats() {
+        this.kills = 0;
+        this.deaths = 0;
     }
 
     public Map<String, Object> serialize() {
-        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> data = new LinkedHashMap<>();
         data.put("name", name);
         data.put("leader", leader.toString());
         data.put("created", created.toString());
         data.put("pvpEnabled", pvpEnabled);
         data.put("tagColor", tagColor);
         data.put("kills", kills);
-
-        List<String> membersList = new ArrayList<>();
-        for (UUID member : members) {
-            membersList.add(member.toString());
-        }
-        data.put("members", membersList);
-
-        List<String> moderatorsList = new ArrayList<>();
-        for (UUID moderator : moderators) {
-            moderatorsList.add(moderator.toString());
-        }
-        data.put("moderators", moderatorsList);
-
+        data.put("deaths", deaths);
+        data.put("members", members.stream().map(UUID::toString).sorted().toList());
+        data.put("moderators", moderators.stream().map(UUID::toString).sorted().toList());
+        data.put("allies", allies.stream().sorted().toList());
         return data;
     }
 
     public static Clan deserialize(Map<String, Object> data) {
         String name = (String) data.get("name");
         UUID leader = UUID.fromString((String) data.get("leader"));
-        LocalDateTime created = LocalDateTime.parse((String) data.get("created"));
+        Object createdRaw = data.get("created");
+        LocalDateTime created = createdRaw != null ? LocalDateTime.parse(createdRaw.toString()) : LocalDateTime.now();
 
-        // Nowe pola z domyślnymi wartościami dla kompatybilności wstecznej
-        boolean pvpEnabled = data.containsKey("pvpEnabled") ? (boolean) data.get("pvpEnabled") : false;
-        String tagColor = data.containsKey("tagColor") ? (String) data.get("tagColor") : "&6";
-        int kills = data.containsKey("kills") ? ((Number) data.get("kills")).intValue() : 0;
+        Clan clan = new Clan(name, leader, created);
 
-        Set<UUID> members = new HashSet<>();
-        @SuppressWarnings("unchecked")
-        List<String> membersList = (List<String>) data.get("members");
-        for (String memberStr : membersList) {
-            members.add(UUID.fromString(memberStr));
+        // Pola dodane w nowszych wersjach mają wartości domyślne dla kompatybilności wstecznej
+        clan.pvpEnabled = data.get("pvpEnabled") instanceof Boolean b && b;
+        clan.tagColor = data.get("tagColor") instanceof String s ? s : "&6";
+        clan.kills = data.get("kills") instanceof Number n ? n.intValue() : 0;
+        clan.deaths = data.get("deaths") instanceof Number n ? n.intValue() : 0;
+
+        for (String member : stringList(data.get("members"))) {
+            clan.members.add(UUID.fromString(member));
         }
+        clan.members.add(leader);
 
-        Set<UUID> moderators = new HashSet<>();
-        @SuppressWarnings("unchecked")
-        List<String> moderatorsList = (List<String>) data.get("moderators");
-        if (moderatorsList != null) {
-            for (String moderatorStr : moderatorsList) {
-                moderators.add(UUID.fromString(moderatorStr));
+        for (String moderator : stringList(data.get("moderators"))) {
+            UUID uuid = UUID.fromString(moderator);
+            if (clan.members.contains(uuid) && !uuid.equals(leader)) {
+                clan.moderators.add(uuid);
             }
         }
 
-        return new Clan(name, leader, members, moderators, created, pvpEnabled, tagColor, kills);
+        for (String ally : stringList(data.get("allies"))) {
+            clan.allies.add(ally.toLowerCase(Locale.ROOT));
+        }
+
+        return clan;
+    }
+
+    private static List<String> stringList(Object raw) {
+        List<String> result = new ArrayList<>();
+        if (raw instanceof Collection<?> collection) {
+            for (Object o : collection) {
+                if (o != null) {
+                    result.add(o.toString());
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -202,6 +260,6 @@ public class Clan {
 
     @Override
     public int hashCode() {
-        return name.toLowerCase().hashCode();
+        return getKey().hashCode();
     }
 }
